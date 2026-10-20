@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "PATCH",
+    "path": "/zones/fa4e000000000000000000000000002a/email/routing",
+    "body": {
+      "support_subaddress": true
+    }
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "id": "fa4e000000000000000000000000002a",
+      "tag": "fa4e000000000000000000000000002a",
+      "name": "boxox.dev",
+      "enabled": true,
+      "created": "2026-10-18T01:34:12.186666Z",
+      "modified": "2026-10-18T01:37:03.89157Z",
+      "skip_wizard": false,
+      "support_subaddress": true,
+      "synced": false,
+      "admin_locked": false
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

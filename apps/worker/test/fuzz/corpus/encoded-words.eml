@@ -1,0 +1,10 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: =?UTF-8?Q?broken=ZZ_=E2=80=AE?=
+	=?unknown?B?!!!!?=
+Message-ID: <seed@outside.test>
+Content-Type: text/plain; charset=invalid-charset
+Content-Transfer-Encoding: quoted-printable
+
+bad=ZZ=0=
+continued

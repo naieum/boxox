@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/accounts/00000000000000000000000000000001/email/sending/limits",
+    "body": null
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "quota": {
+        "value": 1000,
+        "unit": "day"
+      },
+      "usage": {
+        "sent": 0,
+        "over_quota": false,
+        "resets_at": null
+      }
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

@@ -1,0 +1,9 @@
+# Exclude internal work records from application source releases.
+.loops export-ignore
+.claude export-ignore
+docs/marketing export-ignore
+docs/v2-plan.md export-ignore
+# Historical experiments and audit prose are not part of the installable product.
+spikes export-ignore
+docs/spikes export-ignore
+docs/security-review.md export-ignore

@@ -1,0 +1,15 @@
+{
+  "kvKey": "send:1792287701282",
+  "ok": false,
+  "ms": 2,
+  "error": {
+    "name": "Error",
+    "code": "E_SENDER_DOMAIN_NOT_AVAILABLE",
+    "message": "email from example.com not allowed because domain is not owned by the same account",
+    "ownKeys": [
+      "stack",
+      "message",
+      "code"
+    ]
+  }
+}

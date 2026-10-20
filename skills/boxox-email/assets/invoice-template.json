@@ -1,0 +1,12 @@
+{
+  "name": "invoice-due",
+  "subject": "Invoice {{invoice_id}}: {{amount}} due {{due_date}}",
+  "html": "<!doctype html><html lang=\"en\" dir=\"ltr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Invoice {{invoice_id}} is due {{due_date}}</title></head><body style=\"margin:0;background:#ffffff;color:#071a3c;font-family:Arial,sans-serif\"><div lang=\"en\" dir=\"ltr\" style=\"max-width:600px;margin:auto;padding:24px\"><h1 style=\"font-size:24px;line-height:1.3\">Invoice {{invoice_id}} is due {{due_date}}</h1><p>Your total is {{amount}}. Review and pay this invoice in your dashboard.</p><p><a href=\"{{invoice_url}}\">Review and pay invoice {{invoice_id}}</a></p></div></body></html>",
+  "text": "Invoice {{invoice_id}} is due {{due_date}}.\n\nYour total is {{amount}}. Review and pay this invoice in your dashboard.\n\nReview and pay invoice {{invoice_id}}: {{invoice_url}}",
+  "variables": [
+    {"name":"invoice_id","type":"string"},
+    {"name":"amount","type":"string"},
+    {"name":"due_date","type":"string"},
+    {"name":"invoice_url","type":"url"}
+  ]
+}

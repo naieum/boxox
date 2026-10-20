@@ -1,0 +1,27 @@
+Received: from mail.ext.test (192.0.2.10)
+        by cloudflare-email.net (cloudflare) id fixture
+        for <ann@mail.example.test>; Fri, 16 Oct 2026 09:00:00 +0000
+Authentication-Results: mx.cloudflare.net;
+	dkim=pass header.d=ext.test header.s=s1 header.b=abc123;
+	dmarc=pass header.from=ext.test policy.dmarc=reject;
+	spf=pass (mx.cloudflare.net: domain of bounce@ext.test designates 192.0.2.10 as permitted sender) smtp.mailfrom=bounce@ext.test;
+	arc=none smtp.remote-ip=192.0.2.10
+From: =?UTF-8?Q?Ren=C3=A9e_Caf=C3=A9?= <renee@ext.test>
+To: ann@mail.example.test
+Subject: =?UTF-8?B?Q2Fmw6kgbWVudSBmb3IgRnJpZGF5?=
+Date: Fri, 16 Oct 2026 11:00:00 +0000
+Message-ID: <alt-3@ext.test>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alt-boundary"
+
+--alt-boundary
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Croissants and caf=C3=A9 au lait on Friday.
+--alt-boundary
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<p>Croissants and <b>caf=C3=A9 au lait</b> on Friday.</p>
+--alt-boundary--

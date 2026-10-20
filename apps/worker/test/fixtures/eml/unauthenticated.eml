@@ -1,0 +1,16 @@
+Received: from unknown (198.51.100.7)
+        by cloudflare-email.net (cloudflare) id fixture
+        for <support@mail.example.test>; Fri, 16 Oct 2026 14:00:00 +0000
+Authentication-Results: mx.cloudflare.net;
+	dkim=none;
+	dmarc=none header.from=cold.test;
+	spf=none smtp.mailfrom=pitch@cold.test
+From: Pitch <pitch@cold.test>
+To: support@mail.example.test
+Subject: Grow your pipeline 10x
+Date: Fri, 16 Oct 2026 14:00:00 +0000
+Message-ID: <cold-5@cold.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+We help companies like yours grow.

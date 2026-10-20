@@ -1,0 +1,16 @@
+# Copy to .dev.vars for local development (never commit .dev.vars).
+# Set production values using Wrangler secrets as described in docs/setup.md.
+
+# Cloudflare API token for /setup (zone onboarding, routing, event subscriptions).
+# Create it from the README's pre-filled link; remove it after setup if you like.
+CF_API_TOKEN=replace-me
+# Non-secret CF_ACCOUNT_ID and OWNER_EMAIL live in wrangler.jsonc vars.
+
+# Agent auth (required for /api/agent/* and /mcp; those routes 503 without it).
+# Generate with: openssl rand -base64 32
+AGENT_JWT_SECRET=replace-me-base64-32-bytes
+
+# Cloudflare Access (set after creating the Access application). The app
+# refuses every request until both are present.
+# ACCESS_AUD=
+# TEAM_DOMAIN=https://<team>.cloudflareaccess.com

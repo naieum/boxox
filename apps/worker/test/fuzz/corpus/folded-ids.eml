@@ -1,0 +1,9 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: Fuzz seed
+Message-ID: <bad one>
+In-Reply-To: <one@outside.test>
+	<two@outside.test>
+References: <one@outside.test> <two@outside.test>
+
+body

@@ -1,0 +1,55 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/zones/fa4e000000000000000000000000002a/email/routing/rules",
+    "body": {
+      "name": "spike-literal",
+      "enabled": true,
+      "matchers": [
+        {
+          "type": "literal",
+          "field": "to",
+          "value": "spike-literal@boxox.dev"
+        }
+      ],
+      "actions": [
+        {
+          "type": "worker",
+          "value": [
+            "boxox-spike"
+          ]
+        }
+      ]
+    }
+  },
+  "status": 200,
+  "contentType": "application/json; charset=UTF-8",
+  "response": {
+    "result": {
+      "id": "fa4e000000000000000000000000000f",
+      "tag": "fa4e000000000000000000000000000f",
+      "name": "spike-literal",
+      "matchers": [
+        {
+          "type": "literal",
+          "field": "to",
+          "value": "spike-literal@boxox.dev"
+        }
+      ],
+      "actions": [
+        {
+          "type": "worker",
+          "value": [
+            "boxox-spike"
+          ]
+        }
+      ],
+      "enabled": true,
+      "priority": 0,
+      "source": "api"
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

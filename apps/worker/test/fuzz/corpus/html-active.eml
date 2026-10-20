@@ -1,0 +1,7 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: Fuzz seed
+Message-ID: <seed@outside.test>
+Content-Type: text/html; charset=utf-8
+
+<svg onload=alert(1)><script>fetch("https://outside.test")</script><form action="https://outside.test"><input name=secret></form>

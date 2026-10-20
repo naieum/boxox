@@ -1,0 +1,85 @@
+{
+  "note": "POST /headers on boxox-spike: one env.EMAIL.send() per header",
+  "results": {
+    "In-Reply-To": {
+      "ok": true,
+      "messageId": "<FakeId0043XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "References": {
+      "ok": true,
+      "messageId": "<FakeId0031XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "List-Unsubscribe": {
+      "ok": true,
+      "messageId": "<FakeId0025XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "List-Unsubscribe-Post": {
+      "ok": true,
+      "messageId": "<FakeId0022XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "List-Id": {
+      "ok": true,
+      "messageId": "<FakeId0018XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "Auto-Submitted": {
+      "ok": true,
+      "messageId": "<FakeId0030XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "Precedence": {
+      "ok": true,
+      "messageId": "<FakeId0023XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "X-Boxox-Message": {
+      "ok": true,
+      "messageId": "<FakeId0029XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "X-Entity-Ref-ID": {
+      "ok": true,
+      "messageId": "<FakeId0028XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "Message-ID": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Message-ID' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "Reply-To": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Reply-To' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "Sender": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Sender' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "Return-Path": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Return-Path' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "Thread-Topic": {
+      "ok": true,
+      "messageId": "<FakeId0045XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    },
+    "Disposition-Notification-To": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Disposition-Notification-To' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "Resent-From": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'Resent-From' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    },
+    "X-Bad Name": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header \"X-Bad Name\" is invalid: header name must be printable ASCII without CR or LF"
+    },
+    "List-Unsubscribe ": {
+      "ok": false,
+      "code": "E_VALIDATION_ERROR",
+      "message": "custom header 'List-Unsubscribe ' is not allowed. Only whitelisted headers and X-* headers are accepted."
+    }
+  }
+}

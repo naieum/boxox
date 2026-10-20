@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/zones/fa4e000000000000000000000000002a/email/sending/subdomains",
+    "body": null
+  },
+  "status": 200,
+  "response": {
+    "result": [
+      {
+        "id": "fa4e0000000000000000000000000013",
+        "tag": "fa4e0000000000000000000000000013",
+        "name": "boxox.dev",
+        "enabled": true,
+        "preview_enabled": true,
+        "return_path_domain": "cf-bounce.boxox.dev",
+        "dkim_selector": "cf-bounce",
+        "drop_suppressed_recipients": false,
+        "created": "2026-10-18T01:35:22.961879Z",
+        "modified": "2026-10-18T01:35:22.961879Z"
+      }
+    ],
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

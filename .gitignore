@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.turbo/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+!.dev.vars.example
+*.log
+.DS_Store
+coverage/
+
+# build loop runtime state (never commit)
+.loops/state.json
+.loops/human/
+.loops/secrets/
+.loops/runs/
+.loops/quarantine.jsonl
+.corpus/
+
+# Local evidence-based audit reports
+snitchfindings/
+__pycache__/

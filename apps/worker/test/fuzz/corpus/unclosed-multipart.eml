@@ -1,0 +1,10 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: Fuzz seed
+Message-ID: <seed@outside.test>
+Content-Type: multipart/mixed; boundary="never-ended"
+
+--never-ended
+Content-Type: text/plain
+
+unterminated part

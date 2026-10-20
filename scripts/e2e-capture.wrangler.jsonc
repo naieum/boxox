@@ -1,0 +1,11 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "boxox-e2e-capture-disposable",
+  "main": "e2e-capture-worker.mjs",
+  "compatibility_date": "2026-06-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "durable_objects": { "bindings": [{ "name": "CAPTURES", "class_name": "E2ECapture" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["E2ECapture"] }],
+  "observability": { "enabled": false }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@boxox/mail",
+  "version": "0.2.0",
+  "description": "Typed client for the Box Ox developer API, with a webhook signature verifier",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks.d.ts",
+      "import": "./dist/webhooks.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "generate": "node scripts/openapi.mjs write",
+    "check-openapi": "node scripts/openapi.mjs check && tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "openapi-typescript": "^7.13.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  },
+  "private": true
+}

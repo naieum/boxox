@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/zones/fa4e000000000000000000000000002a/email/routing/enable",
+    "body": {}
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "id": "fa4e000000000000000000000000002a",
+      "tag": "fa4e000000000000000000000000002a",
+      "name": "boxox.dev",
+      "enabled": true,
+      "created": "2026-10-18T01:34:12.186666Z",
+      "modified": "2026-10-18T01:34:12.186666Z",
+      "skip_wizard": false,
+      "support_subaddress": false,
+      "synced": true,
+      "admin_locked": false,
+      "status": "misconfigured/locked",
+      "errors": [
+        {
+          "code": "spf.foreign",
+          "existing": {
+            "id": "fa4e000000000000000000000000000b",
+            "name": "boxox.dev",
+            "content": "\"v=spf1 -all\"",
+            "type": "TXT",
+            "ttl": 1
+          }
+        }
+      ]
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

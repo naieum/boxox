@@ -1,0 +1,41 @@
+{
+  "kvKey": "event:cf.email.sending.message.bounced:<FakeId0048XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>:fa4e0000000000000000000000000010",
+  "queueMessageId": "fa4e0000000000000000000000000010",
+  "attempts": 1,
+  "timestamp": "2026-10-18T01:41:37.370Z",
+  "body": {
+    "type": "cf.email.sending.message.bounced",
+    "source": {
+      "zoneId": "fa4e000000000000000000000000002a",
+      "domain": "boxox.dev",
+      "type": "email.sending"
+    },
+    "metadata": {
+      "accountId": "00000000000000000000000000000001",
+      "eventSubscriptionId": "fa4e0000000000000000000000000027",
+      "eventSchemaVersion": 1,
+      "eventTimestamp": "2026-10-18T01:41:37.370Z"
+    },
+    "payload": {
+      "eventId": "00000002-0000-4000-8000-000000000002",
+      "messageId": "<FakeId0048XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>",
+      "sender": "spike@boxox.dev",
+      "recipient": "spike-reject@boxox.dev",
+      "subject": "spike bounce",
+      "terminal": true,
+      "delivery": {
+        "status": "bounced",
+        "provider": "cloudflare",
+        "deliveryTimeMs": 235,
+        "smtpStatusCode": "555",
+        "smtpEnhancedStatusCode": "5.7.1",
+        "smtpResponse": "Permanent Unknown error: permanent error (555): 5.7.1 550 5.1.1 spike: mailbox does not exist. FakeId0049XX"
+      },
+      "bounce": {
+        "type": "hard",
+        "classification": "permanent_failure",
+        "reason": "Permanent Unknown error: permanent error (555): 5.7.1 550 5.1.1 spike: mailbox does not exist. FakeId0049XX"
+      }
+    }
+  }
+}

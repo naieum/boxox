@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/accounts/00000000000000000000000000000001/email/sending/send",
+    "body": {
+      "from": {
+        "address": "spike@boxox.dev",
+        "name": "Box Ox Spike"
+      },
+      "to": "spike-rest@boxox.dev",
+      "subject": "spike rest",
+      "text": "via REST"
+    }
+  },
+  "status": 200,
+  "contentType": "application/json",
+  "response": {
+    "success": true,
+    "errors": [],
+    "messages": [],
+    "result": {
+      "message_id": "<FakeId0027XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>",
+      "delivered": [],
+      "queued": [
+        "spike-rest@boxox.dev"
+      ],
+      "permanent_bounces": [],
+      "suppressed_recipients": []
+    }
+  }
+}

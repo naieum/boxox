@@ -1,0 +1,13 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: Fuzz seed
+Message-ID: <seed@outside.test>
+Content-Type: multipart/mixed; boundary="files"
+
+--files
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="../../private\\x.exe"; filename*=utf-8''..%2F..%2Fevil%0D%0A.exe
+Content-Transfer-Encoding: base64
+
+TVqQAA==!!!
+--files--

@@ -1,0 +1,27 @@
+Received: from mail.ext.test (192.0.2.10)
+        by cloudflare-email.net (cloudflare) id fixture
+        for <ann@mail.example.test>; Fri, 16 Oct 2026 09:00:00 +0000
+Authentication-Results: mx.cloudflare.net;
+	dkim=pass header.d=ext.test header.s=s1 header.b=abc123;
+	dmarc=pass header.from=ext.test policy.dmarc=reject;
+	spf=pass (mx.cloudflare.net: domain of bounce@ext.test designates 192.0.2.10 as permitted sender) smtp.mailfrom=bounce@ext.test;
+	arc=none smtp.remote-ip=192.0.2.10
+From: Grace <grace@ext.test>
+To: ann@mail.example.test
+Subject: Meeting notes
+Date: Fri, 16 Oct 2026 12:00:00 +0000
+Message-ID: <att-4@ext.test>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary"
+
+--mixed-boundary
+Content-Type: text/plain; charset=utf-8
+
+Notes from today are attached.
+--mixed-boundary
+Content-Type: text/plain; name="notes.txt"
+Content-Disposition: attachment; filename="notes.txt"
+Content-Transfer-Encoding: base64
+
+MS4gU2hpcCB0aGUgaW5nZXN0IHdvcmtmbG93CjIuIFJldmlldyB0aHJlYWRpbmcK
+--mixed-boundary--

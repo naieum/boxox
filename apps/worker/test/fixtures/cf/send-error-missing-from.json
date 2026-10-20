@@ -1,0 +1,13 @@
+{
+  "kvKey": "send:1792287701534",
+  "ok": false,
+  "ms": 0,
+  "error": {
+    "name": "TypeError",
+    "message": "Cannot initialize N10edgeworker3api12EmailAddressE with required members from an undefined or null value.",
+    "ownKeys": [
+      "stack",
+      "message"
+    ]
+  }
+}

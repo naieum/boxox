@@ -1,0 +1,44 @@
+[
+  {
+    "id": "baseline",
+    "tests": [
+      "test/agent-rate-limit.test.ts",
+      "test/schema.test.ts"
+    ]
+  },
+  {
+    "id": "reads",
+    "tests": [
+      "test/agent-reads.test.ts"
+    ]
+  },
+  {
+    "id": "work",
+    "tests": [
+      "test/agent-work.test.ts"
+    ]
+  },
+  {
+    "id": "send",
+    "tests": [
+      "test/agent-send-idempotency.test.ts",
+      "test/agent-send-policy.test.ts"
+    ]
+  },
+  {
+    "id": "ingestion",
+    "tests": [
+      "test/ingest-dispatch.test.ts",
+      "test/email-handler.test.ts",
+      "test/ingest-spam.test.ts",
+      "test/operations.test.ts"
+    ]
+  },
+  {
+    "id": "mcp",
+    "tests": [
+      "test/mcp.test.ts",
+      "test/agent-v2.test.ts"
+    ]
+  }
+]

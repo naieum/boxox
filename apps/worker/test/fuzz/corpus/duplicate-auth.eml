@@ -1,0 +1,8 @@
+From: Sender <sender@outside.test>
+To: me@example.test
+Subject: Fuzz seed
+Message-ID: <seed@outside.test>
+Authentication-Results: mx.cloudflare.net; dmarc=pass header.from=outside.test
+Authentication-Results: mx.cloudflare.net; dmarc=pass header.from=outside.test
+
+forged duplicates

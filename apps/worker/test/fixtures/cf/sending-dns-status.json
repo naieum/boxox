@@ -1,0 +1,58 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/zones/fa4e000000000000000000000000002a/email/sending/subdomains/fa4e0000000000000000000000000013/dns/status",
+    "body": null
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "records": [
+        {
+          "name": "cf-bounce.boxox.dev",
+          "content": "route1.mx.cloudflare.net.",
+          "type": "MX",
+          "priority": 24,
+          "ttl": 1
+        },
+        {
+          "name": "cf-bounce.boxox.dev",
+          "content": "route2.mx.cloudflare.net.",
+          "type": "MX",
+          "priority": 54,
+          "ttl": 1
+        },
+        {
+          "name": "cf-bounce.boxox.dev",
+          "content": "route3.mx.cloudflare.net.",
+          "type": "MX",
+          "priority": 47,
+          "ttl": 1
+        },
+        {
+          "name": "cf-bounce.boxox.dev",
+          "content": "\"v=spf1 include:_spf.mx.cloudflare.net ~all\"",
+          "type": "TXT",
+          "ttl": 1
+        },
+        {
+          "name": "cf-bounce._domainkey.boxox.dev",
+          "content": "\"v=DKIM1; h=sha256; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiweykoi+o48IOGuP7GR3X0MOExCUDY/BCRHoWBnh3rChl7WhdyCxW3jgq1daEjPPqoi7sJvdg5hEQVsgVRQP4DcnQDVjGMbASQtrY4WmB1VebF+RPJB2ECPsEDTpeiI5ZyUAwJaVX7r6bznU67g7LvFq35yIo4sdlmtZGV+i0H4cpYH9+3JJ78km4KXwaf9xUJCWF6nxeD+qG6Fyruw1Qlbds2r85U9dkNDVAS3gioCvELryh1TxKGiVTkg4wqHTyHfWsp7KD3WQHYJn0RyfJJu6YEmL77zonn7p2SRMvTMP3ZEXibnC9gz3nnhR6wcYL8Q7zXypKTMD58bTixDSJwIDAQAB\"",
+          "type": "TXT",
+          "ttl": 1
+        },
+        {
+          "name": "_dmarc.boxox.dev",
+          "content": "\"v=DMARC1; p=reject;\"",
+          "type": "TXT",
+          "ttl": 1
+        }
+      ],
+      "errors": [],
+      "status": "ready"
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

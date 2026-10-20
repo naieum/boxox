@@ -1,0 +1,1 @@
+ALTER TABLE `api_messages` ADD `mailbox_copied_at` integer;

@@ -1,0 +1,79 @@
+{
+  "kvKey": "inbound:1792287696937:spike-reject@boxox.dev",
+  "receivedAt": "2026-10-18T01:41:36.937Z",
+  "from": "b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev",
+  "to": "spike-reject@boxox.dev",
+  "rawSize": 4900,
+  "headers": [
+    [
+      "arc-authentication-results",
+      "i=1; mx.cloudflare.net; dkim=pass header.d=boxox.dev header.s=cf-bounce header.b=KU9YAgcY; dkim=pass header.d=cloudflare-smtp.net header.s=cf2024-1 header.b=BDkM5lwK; dmarc=pass header.from=boxox.dev policy.dmarc=none; spf=none (mx.cloudflare.net: no SPF records found for postmaster@bg-gf.cloudflare-smtp.net) smtp.helo=bg-gf.cloudflare-smtp.net; spf=pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender) smtp.mailfrom=b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev; arc=none smtp.remote-ip=104.30.16.65"
+    ],
+    [
+      "arc-message-signature",
+      "i=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-email.net; c=relaxed/relaxed; h=To:Subject:Date:From:from:reply-to:cc:resent-date:resent-from:resent-to :resent-cc:in-reply-to:references:list-id:list-help:list-subscribe :list-post:list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSB hevQvZJ6N+dwfNBVoYap1HFqGF/icEM50As=; b=WclQi/1sJJ0lq1g5hVcn9OTGcqG+5pqwv/N zVeEj9LyWP+bW84qVoy4NoKVv1rCXIDLatVNsPSraJ/ck/diFsEBVYXmYrGOCivWe4ZPdDFbeN0 TUK9Eror54qUFEKh7aVabjQOF9v7Ktb/rVm53GQSOLMTZD72qOMsV7masKPz1N8SYIOs5ICRhwz 1wZU4AP0jBm/AxdoEJrQr1rcxxqjpjHodjdyA1OZEi6nujHL8V7b2ij0m7zW65O5iy1q/mgYsXq dBzgMHHVig+WwBvTOthMLlm8E+gWCNa17ZWbbx7yLluoXNho1YPilWW/i7tZGiYEF4JZi2fxl7e 1+Xl2Og==;"
+    ],
+    [
+      "arc-seal",
+      "i=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-email.net; cv=none; b=GFKRAe1/1SS2BwZpzDyNXaHbf8/J29q2BzMTVG/Ubzd33GtW5oTFtBs3S3ZddUZohEgqu5BGa kRXJ6lBcRTtLYy04Y/7+E9y1tWJxNHY25fVUjVFCKDZO6ekO/3xp8LyO5C00G0SP806j1XmkYpp IOmZhR3apNtCijVeiRTeFMZDoump76uJSkyV0Ss/VSutkVJWKZAf82oBTt4v8yGMx3ZlACbowUX 7A07okh9kL2rjjA+h55Lx/gpua7UJbSnIVMzVHVH6wm1r26nrpEEgUGHGHGeMYkmD6WkvgvWEbU dSqt7+Ei9yZdwIwlwlZr3ppxvpemXAGAAS1rh96v0Pew==;"
+    ],
+    [
+      "authentication-results",
+      "mx.cloudflare.net; dkim=pass header.d=boxox.dev header.s=cf-bounce header.b=KU9YAgcY; dkim=pass header.d=cloudflare-smtp.net header.s=cf2024-1 header.b=BDkM5lwK; dmarc=pass header.from=boxox.dev policy.dmarc=none; spf=none (mx.cloudflare.net: no SPF records found for postmaster@bg-gf.cloudflare-smtp.net) smtp.helo=bg-gf.cloudflare-smtp.net; spf=pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender) smtp.mailfrom=b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev; arc=none smtp.remote-ip=104.30.16.65"
+    ],
+    [
+      "content-transfer-encoding",
+      "7bit"
+    ],
+    [
+      "content-type",
+      "text/plain; charset=utf-8"
+    ],
+    [
+      "date",
+      "Sun, 18 Oct 2026 01:41:35 +0000"
+    ],
+    [
+      "dkim-signature",
+      "v=1; a=rsa-sha256; s=cf-bounce; d=boxox.dev; c=relaxed/relaxed; h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date :resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help :list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post :list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSBhevQvZJ6N+ dwfNBVoYap1HFqGF/icEM50As=; b=KU9YAgcYA/QbPdqaFR6BrSKv88hc4zkhPRUBUS9cP8UaT v2WjqXFDkEBgVNLyWj/Q9P6NFSbZc2Q1zhraOLf7VAqV/HLXsTuHkAr/ruufQgRVZxQf42P23MD 3fJ5kWIGyyhrePmqWy07NmEb0lesaKw/KBhTe4/ierErXEI5HZtrvFwzFrepJ2z4SIdlwyXE4/r 3gQafNWBdKB+T6EPpQlb1tNh3GXTbpZX9MhE0tTEhv6kLjSEkA8b+ZKDOLwch/psIhMSXKU2rL+ 23u4LjXm4DKuvrr7OeGsSlb2OBz740hK6NSDO2QUin8hmP4fwFnVyl3wjzrJ9naKS70TgfWw==;, v=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-smtp.net; c=relaxed/relaxed; h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date :resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help :list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post :list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSBhevQvZJ6N+ dwfNBVoYap1HFqGF/icEM50As=; b=BDkM5lwKOTUYuBuVw0uH49LxPaJ3nId9FrSZu1m9yeQPK vt/dYzJXxzKgGNtUn8GmlRVs7KPI1kDPn4O4LaqkBQR+Dc1s+Gt7nO77MfGQ6ISffNSPaPhxMyS NB/X9m0Xw/H6MLPSyzXpoOE7T/9fH7FiWg28kJ8cPaOPG13BTLoyK9S8O8TuWxm8XHXm/GSLPky dCilETKkb3OKLzDsOemGzOau2PY/jN/zuWENWqc8beIkGZjxUyBMCliWzUrBYkQZRJ6FJHNJyui Piuc4CkrIHgbsicXWZ0Acn3wVEkUSVUTprvhbuQROsOjYcsyI7CcwGJBuXEjKkqXWqJ4TjRw==;"
+    ],
+    [
+      "feedback-id",
+      "boxox.dev:5:5:Cloudflare"
+    ],
+    [
+      "from",
+      "spike@boxox.dev"
+    ],
+    [
+      "message-id",
+      "<FakeId0048XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>"
+    ],
+    [
+      "mime-version",
+      "1.0"
+    ],
+    [
+      "received",
+      "from bg-gf.cloudflare-smtp.net (104.30.16.65) by cloudflare-email.net (cloudflare) id FakeId0049XX for <spike-reject@boxox.dev>; Sun, 18 Oct 2026 01:41:36 +0000"
+    ],
+    [
+      "received-spf",
+      "pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender) receiver=mx.cloudflare.net; client-ip=104.30.16.65; envelope-from=\"b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev\"; helo=bg-gf.cloudflare-smtp.net;"
+    ],
+    [
+      "subject",
+      "spike bounce"
+    ],
+    [
+      "to",
+      "spike-reject@boxox.dev"
+    ],
+    [
+      "x-cf-spamh-score",
+      "1"
+    ]
+  ],
+  "raw": "Received: from bg-gf.cloudflare-smtp.net (104.30.16.65)\r\n        by cloudflare-email.net (cloudflare) id FakeId0049XX\r\n        for <spike-reject@boxox.dev>; Sun, 18 Oct 2026 01:41:36 +0000\r\nARC-Seal: i=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-email.net; cv=none;\r\n\tb=GFKRAe1/1SS2BwZpzDyNXaHbf8/J29q2BzMTVG/Ubzd33GtW5oTFtBs3S3ZddUZohEgqu5BGa\r\n\tkRXJ6lBcRTtLYy04Y/7+E9y1tWJxNHY25fVUjVFCKDZO6ekO/3xp8LyO5C00G0SP806j1XmkYpp\r\n\tIOmZhR3apNtCijVeiRTeFMZDoump76uJSkyV0Ss/VSutkVJWKZAf82oBTt4v8yGMx3ZlACbowUX\r\n\t7A07okh9kL2rjjA+h55Lx/gpua7UJbSnIVMzVHVH6wm1r26nrpEEgUGHGHGeMYkmD6WkvgvWEbU\r\n\tdSqt7+Ei9yZdwIwlwlZr3ppxvpemXAGAAS1rh96v0Pew==;\r\nARC-Message-Signature: i=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-email.net; c=relaxed/relaxed;\r\n\th=To:Subject:Date:From:from:reply-to:cc:resent-date:resent-from:resent-to\r\n\t:resent-cc:in-reply-to:references:list-id:list-help:list-subscribe\r\n\t:list-post:list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSB\r\n\thevQvZJ6N+dwfNBVoYap1HFqGF/icEM50As=; b=WclQi/1sJJ0lq1g5hVcn9OTGcqG+5pqwv/N\r\n\tzVeEj9LyWP+bW84qVoy4NoKVv1rCXIDLatVNsPSraJ/ck/diFsEBVYXmYrGOCivWe4ZPdDFbeN0\r\n\tTUK9Eror54qUFEKh7aVabjQOF9v7Ktb/rVm53GQSOLMTZD72qOMsV7masKPz1N8SYIOs5ICRhwz\r\n\t1wZU4AP0jBm/AxdoEJrQr1rcxxqjpjHodjdyA1OZEi6nujHL8V7b2ij0m7zW65O5iy1q/mgYsXq\r\n\tdBzgMHHVig+WwBvTOthMLlm8E+gWCNa17ZWbbx7yLluoXNho1YPilWW/i7tZGiYEF4JZi2fxl7e\r\n\t1+Xl2Og==;\r\nARC-Authentication-Results: i=1; mx.cloudflare.net;\r\n\tdkim=pass header.d=boxox.dev header.s=cf-bounce header.b=KU9YAgcY;\r\n\tdkim=pass header.d=cloudflare-smtp.net header.s=cf2024-1 header.b=BDkM5lwK;\r\n\tdmarc=pass header.from=boxox.dev policy.dmarc=none;\r\n\tspf=none (mx.cloudflare.net: no SPF records found for postmaster@bg-gf.cloudflare-smtp.net) smtp.helo=bg-gf.cloudflare-smtp.net;\r\n\tspf=pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender) smtp.mailfrom=b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev;\r\n\tarc=none smtp.remote-ip=104.30.16.65\r\nReceived-SPF: pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender)\r\n\treceiver=mx.cloudflare.net; client-ip=104.30.16.65; envelope-from=\"b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev\"; helo=bg-gf.cloudflare-smtp.net;\r\nAuthentication-Results: mx.cloudflare.net;\r\n\tdkim=pass header.d=boxox.dev header.s=cf-bounce header.b=KU9YAgcY;\r\n\tdkim=pass header.d=cloudflare-smtp.net header.s=cf2024-1 header.b=BDkM5lwK;\r\n\tdmarc=pass header.from=boxox.dev policy.dmarc=none;\r\n\tspf=none (mx.cloudflare.net: no SPF records found for postmaster@bg-gf.cloudflare-smtp.net) smtp.helo=bg-gf.cloudflare-smtp.net;\r\n\tspf=pass (mx.cloudflare.net: domain of b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev designates 104.30.16.65 as permitted sender) smtp.mailfrom=b1auiifake0036xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@cf-bounce.boxox.dev;\r\n\tarc=none smtp.remote-ip=104.30.16.65\r\nX-CF-SpamH-Score: 1\r\nDKIM-Signature: v=1; a=rsa-sha256; s=cf-bounce; d=boxox.dev; c=relaxed/relaxed;\r\n\th=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date\r\n\t:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help\r\n\t:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post\r\n\t:list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSBhevQvZJ6N+\r\n\tdwfNBVoYap1HFqGF/icEM50As=; b=KU9YAgcYA/QbPdqaFR6BrSKv88hc4zkhPRUBUS9cP8UaT\r\n\tv2WjqXFDkEBgVNLyWj/Q9P6NFSbZc2Q1zhraOLf7VAqV/HLXsTuHkAr/ruufQgRVZxQf42P23MD\r\n\t3fJ5kWIGyyhrePmqWy07NmEb0lesaKw/KBhTe4/ierErXEI5HZtrvFwzFrepJ2z4SIdlwyXE4/r\r\n\t3gQafNWBdKB+T6EPpQlb1tNh3GXTbpZX9MhE0tTEhv6kLjSEkA8b+ZKDOLwch/psIhMSXKU2rL+\r\n\t23u4LjXm4DKuvrr7OeGsSlb2OBz740hK6NSDO2QUin8hmP4fwFnVyl3wjzrJ9naKS70TgfWw==;\r\nDKIM-Signature: v=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-smtp.net; c=relaxed/relaxed;\r\n\th=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date\r\n\t:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help\r\n\t:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post\r\n\t:list-owner:list-archive; t=1792287696; x=1792892496; bh=8i6MvJSBhevQvZJ6N+\r\n\tdwfNBVoYap1HFqGF/icEM50As=; b=BDkM5lwKOTUYuBuVw0uH49LxPaJ3nId9FrSZu1m9yeQPK\r\n\tvt/dYzJXxzKgGNtUn8GmlRVs7KPI1kDPn4O4LaqkBQR+Dc1s+Gt7nO77MfGQ6ISffNSPaPhxMyS\r\n\tNB/X9m0Xw/H6MLPSyzXpoOE7T/9fH7FiWg28kJ8cPaOPG13BTLoyK9S8O8TuWxm8XHXm/GSLPky\r\n\tdCilETKkb3OKLzDsOemGzOau2PY/jN/zuWENWqc8beIkGZjxUyBMCliWzUrBYkQZRJ6FJHNJyui\r\n\tPiuc4CkrIHgbsicXWZ0Acn3wVEkUSVUTprvhbuQROsOjYcsyI7CcwGJBuXEjKkqXWqJ4TjRw==;\r\nFeedback-ID: boxox.dev:5:5:Cloudflare\r\nFrom: spike@boxox.dev\r\nMessage-ID: <FakeId0048XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>\r\nDate: Sun, 18 Oct 2026 01:41:35 +0000\r\nSubject: spike bounce\r\nTo: spike-reject@boxox.dev\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nshould bounce\r\n\r\n",
+  "rawTruncated": false
+}

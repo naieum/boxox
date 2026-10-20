@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/zones/fa4e000000000000000000000000002a/email/routing",
+    "body": null
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "id": "fa4e000000000000000000000000002a",
+      "tag": "fa4e000000000000000000000000002a",
+      "name": "boxox.dev",
+      "enabled": true,
+      "created": "2026-10-18T01:34:12.186666Z",
+      "modified": "2026-10-18T01:35:09.307356Z",
+      "skip_wizard": false,
+      "support_subaddress": false,
+      "synced": false,
+      "admin_locked": false,
+      "status": "ready"
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

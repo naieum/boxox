@@ -1,0 +1,4412 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Box Ox developer API",
+    "version": "1.0.0",
+    "description": "Send, schedule and log mail, manage templates, webhooks, received mail and suppressions for one domain. Errors are `{error:{code,message,param?}}`. Lists use cursor pagination (`nextCursor`)."
+  },
+  "servers": [
+    {
+      "url": "{baseUrl}",
+      "variables": {
+        "baseUrl": {
+          "default": "https://mail.example.com"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "messages"
+    },
+    {
+      "name": "keys"
+    },
+    {
+      "name": "templates"
+    },
+    {
+      "name": "webhooks"
+    },
+    {
+      "name": "received"
+    },
+    {
+      "name": "suppressions"
+    }
+  ],
+  "paths": {
+    "/dev/v1/messages": {
+      "post": {
+        "operationId": "sendMessage",
+        "summary": "Send or schedule one message (needs `send`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "description": "Replays within 24 h return the original response; a different body gets 409."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Queued or scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuedMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Idempotency-Key conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit or daily cap reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listMessages",
+        "summary": "Message log, newest first (needs `read_log`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "queued",
+                "scheduled",
+                "sent",
+                "delivered",
+                "deferred",
+                "bounced",
+                "complained",
+                "failed",
+                "canceled"
+              ]
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            }
+          },
+          {
+            "name": "recipient",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 320
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MessageSummary"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/messages/batch": {
+      "post": {
+        "operationId": "sendBatch",
+        "summary": "Send up to 100 messages, all-or-nothing or partial (needs `send`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "description": "Replays within 24 h return the original response; a different body gets 409."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Queued; `errors` lists skipped messages in partial mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Idempotency-Key conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No message was sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchRejected"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit or daily cap reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/messages/{id}": {
+      "get": {
+        "operationId": "getMessage",
+        "summary": "One message with its status timeline and rendered body (needs `read_log`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "rescheduleMessage",
+        "summary": "Move a scheduled message's send time (needs `send`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescheduleResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Not scheduled any more",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/messages/{id}/cancel": {
+      "post": {
+        "operationId": "cancelMessage",
+        "summary": "Cancel a scheduled message (needs `send`)",
+        "tags": [
+          "messages"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Not scheduled any more",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/keys": {
+      "get": {
+        "operationId": "listKeys",
+        "summary": "Domain keys on the management key's domains",
+        "tags": [
+          "keys"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DomainKey"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createKey",
+        "summary": "Create a domain key (management keys only)",
+        "tags": [
+          "keys"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the secret is shown once",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/keys/{id}/rotate": {
+      "post": {
+        "operationId": "rotateKey",
+        "summary": "Issue a new secret; the old one works for the overlap window",
+        "tags": [
+          "keys"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/keys/{id}/revoke": {
+      "post": {
+        "operationId": "revokeKey",
+        "summary": "Revoke a domain key at once",
+        "tags": [
+          "keys"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/templates": {
+      "get": {
+        "operationId": "listTemplates",
+        "summary": "Latest version of each template (needs `templates`)",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Template"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTemplate",
+        "summary": "Create a template at version 1",
+        "tags": [
+          "templates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Template"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "A template with this name exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/templates/{name}": {
+      "get": {
+        "operationId": "getTemplate",
+        "summary": "The latest version, or ?version=",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Template"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateTemplate",
+        "summary": "Save a new version",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Template"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTemplate",
+        "summary": "Delete every version",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDeleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/templates/{name}/versions": {
+      "get": {
+        "operationId": "listTemplateVersions",
+        "summary": "Every version, newest first",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Template"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/templates/{name}/preview": {
+      "post": {
+        "operationId": "previewTemplate",
+        "summary": "Render with sample variables",
+        "tags": [
+          "templates"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatePreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks": {
+      "post": {
+        "operationId": "createWebhook",
+        "summary": "Add an HTTPS endpoint (needs `webhooks`)",
+        "tags": [
+          "webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the secret is shown once",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookWithSecret"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "description": "URL not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listWebhooks",
+        "summary": "Endpoints on the key's domain",
+        "tags": [
+          "webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Webhook"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/listen": {
+      "get": {
+        "operationId": "listenWebhooks",
+        "summary": "Live events on the key's domain over a WebSocket, for local development",
+        "tags": [
+          "webhooks"
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching protocols; each text frame is a WebhookListenFrame"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "426": {
+            "description": "Not a WebSocket upgrade",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}": {
+      "get": {
+        "operationId": "getWebhook",
+        "summary": "One endpoint",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWebhook",
+        "summary": "Change the URL or events, or enable/disable",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "description": "URL not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteWebhook",
+        "summary": "Delete an endpoint",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}/rotate": {
+      "post": {
+        "operationId": "rotateWebhookSecret",
+        "summary": "New signing secret; both sign during the overlap",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookWithSecret"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}/test": {
+      "post": {
+        "operationId": "testWebhook",
+        "summary": "Send a webhook.test event",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookTestResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Webhook disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}/deliveries": {
+      "get": {
+        "operationId": "listWebhookDeliveries",
+        "summary": "Delivery log, newest first",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "succeeded",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookDelivery"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}/deliveries/{deliveryId}": {
+      "get": {
+        "operationId": "getWebhookDelivery",
+        "summary": "One delivery with its attempt log and payload",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deliveryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/webhooks/{id}/deliveries/{deliveryId}/replay": {
+      "post": {
+        "operationId": "replayWebhookDelivery",
+        "summary": "Send a finished delivery again",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deliveryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDelivery"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Disabled or still pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/received": {
+      "get": {
+        "operationId": "listReceived",
+        "summary": "Mail received on the domain's app inboxes (needs `read_received`)",
+        "tags": [
+          "received"
+        ],
+        "parameters": [
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 320
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ReceivedEmail"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/received/{id}": {
+      "get": {
+        "operationId": "getReceived",
+        "summary": "Parsed fields, authentication, bodies and attachments",
+        "tags": [
+          "received"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivedEmailDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/received/{id}/raw": {
+      "get": {
+        "operationId": "getReceivedRawUrl",
+        "summary": "A signed, expiring link to the original .eml",
+        "tags": [
+          "received"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expiresIn",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 3600
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RawDownload"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Raw downloads are not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/received/{id}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "getReceivedAttachment",
+        "summary": "Download one attachment",
+        "tags": [
+          "received"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The attachment bytes",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/received/raw/{token}": {
+      "get": {
+        "operationId": "downloadReceivedRaw",
+        "summary": "The signed .eml link itself; no API key, the token is the credential",
+        "tags": [
+          "received"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The original message",
+            "content": {
+              "message/rfc822": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid or expired link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dev/v1/suppressions": {
+      "get": {
+        "operationId": "listSuppressions",
+        "summary": "The domain's suppression list (needs `read_log`)",
+        "tags": [
+          "suppressions"
+        ],
+        "parameters": [
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bounce",
+                "complaint",
+                "manual"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Suppression"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "operationId": "addSuppression",
+        "summary": "Suppress an address (needs `send`)",
+        "tags": [
+          "suppressions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSuppressionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Suppressed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Suppression"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dev/v1/suppressions/{email}": {
+      "get": {
+        "operationId": "getSuppression",
+        "summary": "Whether one address is suppressed",
+        "tags": [
+          "suppressions"
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Suppression"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "removeSuppression",
+        "summary": "Remove an address from our list (Cloudflare's still applies)",
+        "tags": [
+          "suppressions"
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuppressionDeleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "event": {
+      "post": {
+        "summary": "An event delivered to your endpoint, signed with the endpoint's whsec_ secret",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the delivery"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A domain key (bxk_…) for mail routes, or a management key (bxm_…) for /dev/v1/keys."
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The key may not do this",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found on this key's domain",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "param": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 320
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 320
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 320
+                },
+                "maxItems": 50
+              }
+            ]
+          },
+          "cc": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 320
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 320
+                },
+                "maxItems": 50
+              }
+            ]
+          },
+          "bcc": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 320
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 320
+                },
+                "maxItems": 50
+              }
+            ]
+          },
+          "replyTo": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 320
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 998
+          },
+          "html": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "contentType": {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                "contentId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                }
+              },
+              "required": [
+                "filename",
+                "content"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 100
+          },
+          "tags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "sendAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "track": {
+            "type": "object",
+            "properties": {
+              "opens": {
+                "type": "boolean"
+              },
+              "clicks": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "BatchRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "all_or_nothing",
+              "partial"
+            ],
+            "default": "all_or_nothing"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 320
+                },
+                "to": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 320
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 320
+                      },
+                      "maxItems": 50
+                    }
+                  ]
+                },
+                "cc": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 320
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 320
+                      },
+                      "maxItems": 50
+                    }
+                  ]
+                },
+                "bcc": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 320
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 320
+                      },
+                      "maxItems": 50
+                    }
+                  ]
+                },
+                "replyTo": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 320
+                },
+                "subject": {
+                  "type": "string",
+                  "maxLength": 998
+                },
+                "html": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "headers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "attachments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "filename": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      },
+                      "content": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "contentType": {
+                        "type": "string",
+                        "maxLength": 255
+                      },
+                      "contentId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    },
+                    "required": [
+                      "filename",
+                      "content"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 100
+                },
+                "tags": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "maxLength": 256
+                  }
+                },
+                "sendAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "track": {
+                  "type": "object",
+                  "properties": {
+                    "opens": {
+                      "type": "boolean"
+                    },
+                    "clicks": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "template": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "variables": {
+                  "type": "object",
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "additionalProperties": false
+      },
+      "RescheduleRequest": {
+        "type": "object",
+        "properties": {
+          "sendAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "sendAt"
+        ],
+        "additionalProperties": false
+      },
+      "QueuedMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "scheduled",
+              "failed"
+            ]
+          },
+          "scheduledAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "scheduledAt"
+        ],
+        "additionalProperties": false
+      },
+      "BatchResult": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "queued",
+                    "scheduled",
+                    "failed"
+                  ]
+                },
+                "scheduledAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "index",
+                "id",
+                "status",
+                "scheduledAt"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "param": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "data",
+          "errors"
+        ],
+        "additionalProperties": false
+      },
+      "BatchRejected": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "batch_rejected"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "param": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index",
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "error",
+          "errors"
+        ],
+        "additionalProperties": false
+      },
+      "MessageSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "replyTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "scheduled",
+              "sent",
+              "delivered",
+              "deferred",
+              "bounced",
+              "complained",
+              "failed",
+              "canceled"
+            ]
+          },
+          "scheduledAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sentMessageId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "cc",
+          "bcc",
+          "replyTo",
+          "subject",
+          "tags",
+          "status",
+          "scheduledAt",
+          "sentMessageId",
+          "error",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "RescheduleResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "failed"
+            ]
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "scheduledAt"
+        ],
+        "additionalProperties": false
+      },
+      "CancelResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "canceled"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "DomainKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "management",
+              "domain"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "domainId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parentKeyId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "send",
+                "read_log",
+                "read_received",
+                "templates",
+                "webhooks"
+              ]
+            }
+          },
+          "allowedFrom": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ipAllowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rateLimitPerMinute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dailySendCap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rotationEndsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastUsedIp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "domainId",
+          "parentKeyId",
+          "display",
+          "permissions",
+          "allowedFrom",
+          "allowedRecipients",
+          "ipAllowlist",
+          "rateLimitPerMinute",
+          "dailySendCap",
+          "expiresAt",
+          "revokedAt",
+          "rotationEndsAt",
+          "lastUsedAt",
+          "lastUsedIp",
+          "createdBy",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "CreateKeyRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "domain"
+          },
+          "domain": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "send",
+                "read_log",
+                "read_received",
+                "templates",
+                "webhooks"
+              ]
+            },
+            "minItems": 1
+          },
+          "allowedFrom": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320
+            },
+            "maxItems": 50
+          },
+          "allowedRecipients": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320
+            },
+            "maxItems": 50
+          },
+          "ipAllowlist": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "maxItems": 50
+          },
+          "rateLimitPerMinute": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "maximum": 100000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dailySendCap": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "domain",
+          "name",
+          "permissions"
+        ],
+        "additionalProperties": false
+      },
+      "RotateKeyRequest": {
+        "type": "object",
+        "properties": {
+          "overlapHours": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 168
+          }
+        },
+        "additionalProperties": false
+      },
+      "RevokeResult": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "revoked"
+        ],
+        "additionalProperties": false
+      },
+      "TemplateVariable": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "maxLength": 64
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "boolean",
+              "url"
+            ],
+            "default": "string"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "raw": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "CreateTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 998,
+            "default": ""
+          },
+          "html": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 524288
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 524288
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "maxLength": 64
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "url"
+                  ],
+                  "default": "string"
+                },
+                "fallback": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 10000
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "raw": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 100,
+            "default": []
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 998,
+            "default": ""
+          },
+          "html": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 524288
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 524288
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "maxLength": 64
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "url"
+                  ],
+                  "default": "string"
+                },
+                "fallback": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 10000
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "raw": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 100,
+            "default": []
+          }
+        },
+        "additionalProperties": false
+      },
+      "PreviewTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "additionalProperties": false
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "html": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "maxLength": 64
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "url"
+                  ],
+                  "default": "string"
+                },
+                "fallback": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 10000
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "raw": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "version",
+          "subject",
+          "html",
+          "text",
+          "variables",
+          "createdBy",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "TemplatePreview": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "html": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "subject",
+          "html",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "TemplateDeleted": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          },
+          "versions": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "deleted",
+          "versions"
+        ],
+        "additionalProperties": false
+      },
+      "CreateWebhookRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "message.sent",
+                "message.delivered",
+                "message.deferred",
+                "message.bounced",
+                "message.complained",
+                "message.failed",
+                "message.opened",
+                "message.clicked",
+                "message.received"
+              ]
+            },
+            "maxItems": 9
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateWebhookRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "message.sent",
+                "message.delivered",
+                "message.deferred",
+                "message.bounced",
+                "message.complained",
+                "message.failed",
+                "message.opened",
+                "message.clicked",
+                "message.received"
+              ]
+            },
+            "maxItems": 9
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RotateWebhookRequest": {
+        "type": "object",
+        "properties": {
+          "overlapHours": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 168
+          }
+        },
+        "additionalProperties": false
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "message.sent",
+                "message.delivered",
+                "message.deferred",
+                "message.bounced",
+                "message.complained",
+                "message.failed",
+                "message.opened",
+                "message.clicked",
+                "message.received"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "consecutiveFailures": {
+            "type": "integer"
+          },
+          "disabledAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previousSecretExpiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "events",
+          "status",
+          "consecutiveFailures",
+          "disabledAt",
+          "previousSecretExpiresAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "WebhookDeleted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
+        ],
+        "additionalProperties": false
+      },
+      "WebhookTestResult": {
+        "type": "object",
+        "properties": {
+          "deliveryId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebhookDelivery": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "webhookId": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "nextAttemptAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastStatusCode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deliveredAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "webhookId",
+          "eventId",
+          "eventType",
+          "status",
+          "attempts",
+          "nextAttemptAt",
+          "lastStatusCode",
+          "deliveredAt",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "AttemptLogEntry": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "replay": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "at",
+          "status",
+          "durationMs"
+        ],
+        "additionalProperties": false
+      },
+      "ReceivedEmail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "received_email"
+          },
+          "to": {
+            "type": "string"
+          },
+          "from": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email"
+            ],
+            "additionalProperties": false
+          },
+          "toEmails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ccEmails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "spam": {
+            "type": "boolean"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "to",
+          "from",
+          "toEmails",
+          "ccEmails",
+          "subject",
+          "snippet",
+          "spam",
+          "receivedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ReceivedAttachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "declaredType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detectedType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "safe",
+              "previewable",
+              "dangerous"
+            ]
+          },
+          "contentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inline": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "declaredType",
+          "detectedType",
+          "size",
+          "risk",
+          "contentId",
+          "inline"
+        ],
+        "additionalProperties": false
+      },
+      "RawDownload": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "AddSuppressionRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "additionalProperties": false
+      },
+      "Suppression": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "suppression"
+          },
+          "email": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "bounce",
+              "complaint",
+              "manual"
+            ]
+          },
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "email",
+          "reason",
+          "detail",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "SuppressionDeleted": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "suppression"
+          },
+          "email": {
+            "type": "string"
+          },
+          "deleted": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "email",
+          "deleted"
+        ],
+        "additionalProperties": false
+      },
+      "WebhookEventType": {
+        "type": "string",
+        "enum": [
+          "message.sent",
+          "message.delivered",
+          "message.deferred",
+          "message.bounced",
+          "message.complained",
+          "message.failed",
+          "message.opened",
+          "message.clicked",
+          "message.received",
+          "webhook.test"
+        ]
+      },
+      "MessageDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MessageSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timeline": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "scheduled",
+                        "sent",
+                        "delivered",
+                        "deferred",
+                        "bounced",
+                        "complained",
+                        "failed",
+                        "rejected",
+                        "opened",
+                        "clicked",
+                        "canceled"
+                      ]
+                    },
+                    "recipient": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "detail": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "recipient",
+                    "at",
+                    "detail"
+                  ]
+                }
+              },
+              "body": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "html": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "headers": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "attachments": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "filename": {
+                              "type": "string"
+                            },
+                            "contentType": {
+                              "type": "string"
+                            },
+                            "contentId": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "size": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "filename",
+                            "contentType",
+                            "contentId",
+                            "size"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "html",
+                      "headers",
+                      "attachments"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "timeline",
+              "body"
+            ]
+          }
+        ]
+      },
+      "CreatedKey": {
+        "type": "object",
+        "description": "The full secret appears only in this response.",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/DomainKey"
+          },
+          "secret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "secret"
+        ]
+      },
+      "WebhookWithSecret": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Webhook"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "secret": {
+                "type": "string",
+                "description": "whsec_… signing secret; shown only on create and rotate."
+              }
+            },
+            "required": [
+              "secret"
+            ]
+          }
+        ]
+      },
+      "DeliveryDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WebhookDelivery"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "attemptLog": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AttemptLogEntry"
+                }
+              },
+              "payload": {}
+            },
+            "required": [
+              "attemptLog",
+              "payload"
+            ]
+          }
+        ]
+      },
+      "ReceivedEmailDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ReceivedEmail"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "inReplyTo": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "references": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "authentication": {
+                "type": "object",
+                "properties": {
+                  "authenticated": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "authenticated"
+                ]
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "html": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReceivedAttachment"
+                }
+              },
+              "hasRaw": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "messageId",
+              "inReplyTo",
+              "references",
+              "authentication",
+              "text",
+              "html",
+              "attachments",
+              "hasRaw"
+            ]
+          }
+        ]
+      },
+      "WebhookListenFrame": {
+        "type": "object",
+        "description": "One event sent to `GET /dev/v1/webhooks/listen`. `payload` is the WebhookEvent JSON exactly as an endpoint would receive it.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "payload"
+        ]
+      },
+      "WebhookEvent": {
+        "type": "object",
+        "description": "The signed JSON body POSTed to a webhook endpoint (Standard Webhooks headers webhook-id, webhook-timestamp, webhook-signature).",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/WebhookEventType"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "type",
+          "timestamp",
+          "data"
+        ]
+      }
+    }
+  }
+}

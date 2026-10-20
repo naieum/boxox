@@ -1,0 +1,18 @@
+Received: from unknown (198.51.100.9)
+        by cloudflare-email.net (cloudflare) id fixture
+        for <ann@mail.example.test>; Fri, 16 Oct 2026 15:00:00 +0000
+Authentication-Results: mx.cloudflare.net;
+	dkim=none;
+	dmarc=fail header.from=bank.test policy.dmarc=reject;
+	spf=fail smtp.mailfrom=alerts@bank.test
+Received: from attacker.test (198.51.100.9) by relay.attacker.test; Fri, 16 Oct 2026 14:59:00 +0000
+Authentication-Results: mx.cloudflare.net; dmarc=pass header.from=bank.test; dkim=pass header.d=bank.test
+From: Bank Security <alerts@bank.test>
+To: ann@mail.example.test
+Subject: Verify your account
+Date: Fri, 16 Oct 2026 15:00:00 +0000
+Message-ID: <forged-6@bank.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Click here to verify your account.

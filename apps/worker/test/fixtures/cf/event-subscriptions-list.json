@@ -1,0 +1,48 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/accounts/00000000000000000000000000000001/event_subscriptions/subscriptions",
+    "body": null
+  },
+  "status": 200,
+  "contentType": "application/json; charset=UTF-8",
+  "response": {
+    "success": true,
+    "errors": [],
+    "messages": [],
+    "result": [
+      {
+        "id": "fa4e0000000000000000000000000027",
+        "created_at": "2026-10-18T01:37:12.073Z",
+        "modified_at": "2026-10-18T01:37:12.073Z",
+        "name": "spike-email-events-boxox-dev",
+        "enabled": true,
+        "source": {
+          "name": "Email Service",
+          "type": "email.sending",
+          "zone_id": "fa4e000000000000000000000000002a",
+          "domain": "boxox.dev"
+        },
+        "destination": {
+          "type": "queues.queue",
+          "queue_id": "fa4e0000000000000000000000000025"
+        },
+        "events": [
+          "message.delivered",
+          "message.deferred",
+          "message.bounced",
+          "message.failed",
+          "message.rejected",
+          "message.complained"
+        ]
+      }
+    ],
+    "result_info": {
+      "count": 1,
+      "total_count": 1,
+      "page": 1,
+      "per_page": 20,
+      "total_pages": 1
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/zones/fa4e000000000000000000000000002a/email/routing/rules/catch_all",
+    "body": null
+  },
+  "status": 200,
+  "response": {
+    "result": {
+      "id": "fa4e000000000000000000000000000e",
+      "tag": "fa4e000000000000000000000000000e",
+      "name": "",
+      "matchers": [
+        {
+          "type": "all"
+        }
+      ],
+      "actions": [
+        {
+          "type": "drop"
+        }
+      ],
+      "enabled": false,
+      "priority": 2147483647,
+      "source": "api"
+    },
+    "success": true,
+    "errors": [],
+    "messages": []
+  }
+}

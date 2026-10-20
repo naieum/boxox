@@ -1,0 +1,33 @@
+name: Verify
+on:
+  pull_request:
+  push:
+    branches: [v2, main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/install-gitleaks.mjs
+      - run: python3 scripts/check-release-privacy.py --tracked
+      - run: python3 scripts/test/release-privacy.test.py
+      - run: pnpm --filter @boxox/mail build
+      - run: pnpm typecheck
+      - run: pnpm --filter @boxox/web build
+      # CLI and Worker suites each start local workerd runtimes. Keep workspace
+      # test tasks separate on the hosted runner.
+      - run: pnpm test --concurrency=1
+        timeout-minutes: 8
+      - run: node --test scripts/test/deploy-*.test.mjs scripts/test/plan-uninstall.test.mjs
+      - run: pnpm --filter @boxox/worker exec vitest run --config vitest.free.config.ts
+      - run: pnpm audit --audit-level high

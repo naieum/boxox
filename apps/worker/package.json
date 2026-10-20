@@ -1,0 +1,36 @@
+{
+  "name": "@boxox/worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev -c ../../wrangler.jsonc",
+    "build": "wrangler deploy -c ../../wrangler.jsonc --dry-run --outdir=dist",
+    "deploy": "wrangler deploy -c ../../wrangler.jsonc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@boxox/db": "workspace:*",
+    "@boxox/shared": "workspace:*",
+    "@cloudflare/workers-oauth-provider": "^1.2.3",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@modelcontextprotocol/server": "2.3.1",
+    "agents": "^0.28.1",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.13",
+    "jose": "^6.2.3",
+    "postal-mime": "^4.0.8",
+    "zod": "^3.25.0",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.23.0",
+    "@cloudflare/workers-types": "^5.20260706.1",
+    "@vitest/runner": "^4.1.11",
+    "@vitest/snapshot": "^4.1.12",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.1"
+  }
+}

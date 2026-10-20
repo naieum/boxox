@@ -1,0 +1,58 @@
+{
+  "name": "boxox",
+  "private": true,
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "cloudflare": {
+    "bindings": {
+      "OWNER_EMAIL": {
+        "description": "Email used to sign in as the installation owner. Configure Cloudflare Access after deployment."
+      },
+      "CF_ACCOUNT_ID": {
+        "description": "Account ID for this installation, from the Cloudflare dashboard. Use the same account as the build token."
+      },
+      "CF_API_TOKEN": {
+        "description": "Temporary domain setup token. This is separate from the Workers Builds deployment token. See https://boxox.dev/docs/deploy-button/."
+      },
+      "AGENT_JWT_SECRET": {
+        "description": "Generate a private signing secret with openssl rand -base64 32. Keep it stable across deployments."
+      }
+    }
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:generate": "pnpm --filter @boxox/db generate",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "deploy": "bash scripts/deploy.sh",
+    "release:privacy": "python3 scripts/check-release-privacy.py --tracked"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.151.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd",
+      "sharp"
+    ],
+    "overrides": {
+      "seroval@<1.6.3": "1.6.11",
+      "postcss@<8.5.23": "8.5.23",
+      "nanoid@>=3 <3.3.18": "3.3.18",
+      "browserslist@<4.28.7": "4.28.7",
+      "baseline-browser-mapping@<2.11.0": "2.11.3",
+      "source-map-js@<1.2.2": "1.2.2",
+      "@modelcontextprotocol/sdk@<1.31.0": "1.32.1",
+      "sharp@>=0.35.0 <0.35.5": "0.35.5",
+      "undici@>=7 <7.29.1": "7.29.1",
+      "@esbuild-kit/core-utils@3.3.2>esbuild": "0.25.12"
+    }
+  }
+}

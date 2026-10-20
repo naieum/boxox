@@ -1,0 +1,104 @@
+{
+  "note": "one env.EMAIL.send() with to:[a,b] cc:c -> one queue event per recipient, same messageId",
+  "events": [
+    {
+      "kvKey": "event:cf.email.sending.message.delivered:<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>:fa4e0000000000000000000000000009",
+      "queueMessageId": "fa4e0000000000000000000000000009",
+      "attempts": 1,
+      "timestamp": "2026-10-18T01:43:49.643Z",
+      "body": {
+        "type": "cf.email.sending.message.delivered",
+        "source": {
+          "zoneId": "fa4e000000000000000000000000002a",
+          "domain": "boxox.dev",
+          "type": "email.sending"
+        },
+        "metadata": {
+          "accountId": "00000000000000000000000000000001",
+          "eventSubscriptionId": "fa4e0000000000000000000000000027",
+          "eventSchemaVersion": 1,
+          "eventTimestamp": "2026-10-18T01:43:49.643Z"
+        },
+        "payload": {
+          "eventId": "00000006-0000-4000-8000-000000000006",
+          "messageId": "<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>",
+          "sender": "spike@boxox.dev",
+          "recipient": "spike-multi-a@boxox.dev",
+          "subject": "spike multi",
+          "terminal": true,
+          "delivery": {
+            "status": "delivered",
+            "provider": "cloudflare",
+            "deliveryTimeMs": 189
+          }
+        }
+      }
+    },
+    {
+      "kvKey": "event:cf.email.sending.message.delivered:<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>:fa4e000000000000000000000000000d",
+      "queueMessageId": "fa4e000000000000000000000000000d",
+      "attempts": 1,
+      "timestamp": "2026-10-18T01:43:49.643Z",
+      "body": {
+        "type": "cf.email.sending.message.delivered",
+        "source": {
+          "zoneId": "fa4e000000000000000000000000002a",
+          "domain": "boxox.dev",
+          "type": "email.sending"
+        },
+        "metadata": {
+          "accountId": "00000000000000000000000000000001",
+          "eventSubscriptionId": "fa4e0000000000000000000000000027",
+          "eventSchemaVersion": 1,
+          "eventTimestamp": "2026-10-18T01:43:49.643Z"
+        },
+        "payload": {
+          "eventId": "00000007-0000-4000-8000-000000000007",
+          "messageId": "<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>",
+          "sender": "spike@boxox.dev",
+          "recipient": "spike-multi-b@boxox.dev",
+          "subject": "spike multi",
+          "terminal": true,
+          "delivery": {
+            "status": "delivered",
+            "provider": "cloudflare",
+            "deliveryTimeMs": 263
+          }
+        }
+      }
+    },
+    {
+      "kvKey": "event:cf.email.sending.message.delivered:<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>:fa4e0000000000000000000000000020",
+      "queueMessageId": "fa4e0000000000000000000000000020",
+      "attempts": 1,
+      "timestamp": "2026-10-18T01:43:49.643Z",
+      "body": {
+        "type": "cf.email.sending.message.delivered",
+        "source": {
+          "zoneId": "fa4e000000000000000000000000002a",
+          "domain": "boxox.dev",
+          "type": "email.sending"
+        },
+        "metadata": {
+          "accountId": "00000000000000000000000000000001",
+          "eventSubscriptionId": "fa4e0000000000000000000000000027",
+          "eventSchemaVersion": 1,
+          "eventTimestamp": "2026-10-18T01:43:49.643Z"
+        },
+        "payload": {
+          "eventId": "00000008-0000-4000-8000-000000000008",
+          "messageId": "<FakeId0026XXXXXXXXXXXXXXXXXXXXXXXXXX@boxox.dev>",
+          "sender": "spike@boxox.dev",
+          "recipient": "spike-multi-c@boxox.dev",
+          "subject": "spike multi",
+          "terminal": true,
+          "delivery": {
+            "status": "delivered",
+            "provider": "cloudflare",
+            "deliveryTimeMs": 225
+          }
+        }
+      }
+    }
+  ]
+}

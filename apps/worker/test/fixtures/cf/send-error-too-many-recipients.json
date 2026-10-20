@@ -1,0 +1,15 @@
+{
+  "kvKey": "send:1792287701857",
+  "ok": false,
+  "ms": 2,
+  "error": {
+    "name": "Error",
+    "code": "E_TOO_MANY_RECIPIENTS",
+    "message": "maximum of recipients exceeded (given 51 out of 50)",
+    "ownKeys": [
+      "stack",
+      "message",
+      "code"
+    ]
+  }
+}

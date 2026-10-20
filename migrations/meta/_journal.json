@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792287386491,
+      "tag": "0000_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792287397920,
+      "tag": "0001_threads_fts",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792346955603,
+      "tag": "0002_send_caps",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792350332886,
+      "tag": "0003_api_sent_copies",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792361987105,
+      "tag": "0004_sent_folder",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792419500937,
+      "tag": "0005_cloudflare_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792419500938,
+      "tag": "0006_agent_changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792419500939,
+      "tag": "0007_agent_work",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792419500940,
+      "tag": "0008_ingest_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792419500941,
+      "tag": "0009_agent_send_requests",
+      "breakpoints": true
+    }
+  ]
+}

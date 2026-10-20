@@ -1,0 +1,24 @@
+Received: from mail.ext.test (192.0.2.10)
+        by cloudflare-email.net (cloudflare) id fixture
+        for <ann@mail.example.test>; Fri, 16 Oct 2026 09:00:00 +0000
+Authentication-Results: mx.cloudflare.net;
+	dkim=pass header.d=ext.test header.s=s1 header.b=abc123;
+	dmarc=pass header.from=ext.test policy.dmarc=reject;
+	spf=pass (mx.cloudflare.net: domain of bounce@ext.test designates 192.0.2.10 as permitted sender) smtp.mailfrom=bounce@ext.test;
+	arc=none smtp.remote-ip=192.0.2.10
+From: "Ada Lovelace" <ada@ext.test>
+To: Ann <ann@mail.example.test>
+Cc: grace@ext.test
+Subject: Quarterly numbers
+Date: Fri, 16 Oct 2026 09:00:00 +0000
+Message-ID: <plain-1@ext.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Hi Ann,
+
+The quarterly numbers are attached to the board pack. Revenue is up
+twelve percent on the analytical engine line.
+
+Ada
