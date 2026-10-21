@@ -13,7 +13,7 @@ import { id, messageRow, seedMailbox, seedThread } from "./helpers/seed";
 
 let db: Db;
 const SECRET = "agent-work-secret-synthetic-tests-only";
-const testEnv = () => ({ ...env, AGENT_JWT_SECRET: SECRET }) as Env;
+const testEnv = () => ({ ...env, AGENT_JWT_SECRET: SECRET, BOXOX_SIGNING_SECRET: SECRET }) as Env;
 const app = new Hono<AgentEnv>().use("*", async (c, next) => { c.set("db", createDb(c.env)); await next(); }).route("/api/agent/v1", agentWorkRoutes);
 beforeAll(() => { db = createDb(env); });
 async function setup(permissions = ["read"], mailbox?: Awaited<ReturnType<typeof seedMailbox>>) {

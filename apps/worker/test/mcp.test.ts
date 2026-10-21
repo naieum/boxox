@@ -30,7 +30,7 @@ const LOOPBACK = "http://127.0.0.1:8123/cb";
 let db: Db;
 
 function testEnv(): Env {
-  return { ...env, AGENT_JWT_SECRET: SECRET } as Env;
+  return { ...env, AGENT_JWT_SECRET: SECRET, BOXOX_SIGNING_SECRET: SECRET } as Env;
 }
 
 const app = new Hono<AppContext>()

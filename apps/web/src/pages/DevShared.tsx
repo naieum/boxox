@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import DOMPurify from "dompurify";
 import { KeyRound, LogOut } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { frameDocument } from "@/components/MessageFrame.policy";
 import { Panel } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,25 +139,21 @@ export function DomainKeyGate({ need, children }: { need: string; children: (key
   );
 }
 
-/** Rendered mail HTML, sanitized and inside a script-less sandbox. */
+/**
+ * Rendered mail HTML, sanitized and inside a script-less sandbox. The frame
+ * carries the same CSP the inbox message frame uses (MessageFrame.policy.ts),
+ * so remote images never load here even when a template variable smuggles
+ * one in; the attribute stripping below is only a second layer.
+ */
 export function HtmlPreview({ html, minHeight = 260 }: { html: string; minHeight?: number }) {
-  const safe = useMemo(
-    () =>
-      DOMPurify.sanitize(html, {
-        FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input"],
-        FORBID_ATTR: ["onerror", "onload", "onclick"],
-      }).replace(/src="http[^"]*"/gi, 'src="" data-blocked-remote="true"'),
-    [html],
-  );
-  return (
-    <iframe
-      sandbox=""
-      title="preview"
-      className="w-full rounded-lg bg-white"
-      style={{ minHeight }}
-      srcDoc={`<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;margin:16px}</style></head><body>${safe}</body></html>`}
-    />
-  );
+  const doc = useMemo(() => {
+    const safe = DOMPurify.sanitize(html, {
+      FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input", "button", "textarea", "select", "meta", "base", "link", "svg", "math"],
+      FORBID_ATTR: ["srcset", "srcdoc", "action", "formaction", "background", "ping"],
+    }).replace(/\s(src|href)="(?:https?:)?\/\/[^"]*"/gi, (_m, attr: string) => (attr.toLowerCase() === "src" ? ' src="" data-blocked-remote="true"' : ""));
+    return frameDocument(safe, { origin: window.location.origin, showRemote: false });
+  }, [html]);
+  return <iframe sandbox="" title="preview" referrerPolicy="no-referrer" className="w-full rounded-lg bg-white" style={{ minHeight }} srcDoc={doc} />;
 }
 
 export function StatusPill({ status }: { status: string }) {

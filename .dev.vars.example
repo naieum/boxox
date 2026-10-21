@@ -10,6 +10,12 @@ CF_API_TOKEN=replace-me
 # Generate with: openssl rand -base64 32
 AGENT_JWT_SECRET=replace-me-base64-32-bytes
 
+# Root for every other key: signed links and images in mail, tracking tokens,
+# raw-download URLs, the domain-connection cookie, Cloudflare OAuth token
+# sealing and webhook secret sealing. Keep it different from AGENT_JWT_SECRET.
+# Generate with: openssl rand -base64 32
+BOXOX_SIGNING_SECRET=replace-me-base64-32-bytes
+
 # Cloudflare Access (set after creating the Access application). The app
 # refuses every request until both are present.
 # ACCESS_AUD=

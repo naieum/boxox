@@ -16,7 +16,7 @@ import { linkRoutes, prepareMailHtml, signLinkToken, urlSigningKey, verifyImageT
  * web app renders with, the image proxy and the link page.
  */
 const SECRET = "test-only-safe-render-secret-not-real-0000";
-const ENV = { AGENT_JWT_SECRET: SECRET };
+const ENV = { BOXOX_SIGNING_SECRET: SECRET };
 const ORIGIN = "https://mail.example.test";
 
 const app = new Hono<AppContext>().route("/api/link", linkRoutes).route("/api/image-proxy", imageProxyRoutes);
@@ -298,7 +298,7 @@ describe("safe rendering", () => {
     // Anything we didn't sign is refused, never followed.
     const evil = btoa(JSON.stringify({ u: "https://evil.example/login" })).replace(/=+$/, "");
     const tampered = (await sign(target, false)).replace(/^[^.]+/, evil);
-    const forgedKey = await urlSigningKey({ AGENT_JWT_SECRET: "some-other-secret-not-ours-000000" }, "boxox:link:v1");
+    const forgedKey = await urlSigningKey({ BOXOX_SIGNING_SECRET: "some-other-secret-not-ours-000000" }, "boxox:link:v1");
     const forged = (await signLinkToken(forgedKey!, "https://evil.example/login", false))!;
     for (const token of [evil, `${evil}.AAAA`, tampered, forged, "https%3A%2F%2Fevil.example", "..%2F..%2Fevil"]) {
       const res = await request(`/api/link/${token}`);

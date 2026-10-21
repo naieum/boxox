@@ -2,6 +2,8 @@ import { DOMAIN_MONITOR_CRON, monitorDomains } from "./crons/domain-monitor";
 import { OPENPHISH_CRON, refreshOpenPhish } from "./crons/openphish";
 import { rescanUnscanned } from "./crons/spam-rescan";
 import { refitCombiner } from "./crons/spam-refit";
+import { createDb } from "./db";
+import { resealWebhookSecrets } from "./dev/webhooks";
 import type { Env } from "./env";
 import { log } from "./log";
 import { runRetentionPurge } from "./services/retention";
@@ -12,6 +14,8 @@ export async function runScheduled(cron: string, env: Env): Promise<void> {
     await recoverStagedIngest(env).catch(() => log.error("ingest_staging_recovery_failed"));
     await recoverRawOrphans(env).catch(() => log.error("ingest_orphan_recovery_failed"));
     await reconcileIngest(env).catch(() => log.error("ingest_recovery_failed"));
+    // Webhook signing secrets stored before sealing existed are encrypted here, a batch at a time.
+    await resealWebhookSecrets(env, createDb(env)).catch(() => log.error("webhook_secret_reseal_failed"));
     return;
   }
   if (cron === DOMAIN_MONITOR_CRON) { await monitorDomains(env); return; }

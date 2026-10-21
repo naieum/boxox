@@ -50,8 +50,17 @@ export interface Env {
   WEBHOOK_QUEUE_NAME?: string;
   MAIL_BUCKET?: string;
   CF_ACCOUNT_ID?: string;
-  /** 32-byte base64 HS256 secret for agent JWTs; agent routes 503 when absent. */
+  /** 32-byte base64 HS256 secret for agent JWTs only; agent routes 503 when absent. */
   AGENT_JWT_SECRET?: string;
+  /**
+   * 32-byte base64 root for every other key, each derived with its own label:
+   * signed links and image-proxy URLs, tracking tokens, raw-download URLs,
+   * the domain-connection cookie, Cloudflare OAuth token sealing and webhook
+   * secret sealing. Kept apart from AGENT_JWT_SECRET so a leak of either
+   * cannot be used for the other's purposes. Without it links and remote
+   * images are stripped, tracking is off, and those features refuse to run.
+   */
+  BOXOX_SIGNING_SECRET?: string;
   /** The Worker's public origin, for links in sent mail (tracking); tracking stays off without it. */
   PUBLIC_URL?: string;
   /** Optional Spamhaus DQS key; ZEN/DBL lookups are skipped without it. */

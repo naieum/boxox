@@ -9,7 +9,7 @@ import type { Env } from "../src/env";
 
 const ACCOUNT = "a".repeat(32), ACCESS = "fake-oauth-access-token", REFRESH = "fake-oauth-refresh-token";
 const origin = "https://mail.example.test";
-const bindings = { ...env, CF_ACCOUNT_ID: ACCOUNT, CF_OAUTH_CLIENT_ID: "boxox-test-client", AGENT_JWT_SECRET: "test-connection-encryption-secret", PUBLIC_URL: origin, CF_API_TOKEN: undefined };
+const bindings = { ...env, CF_ACCOUNT_ID: ACCOUNT, CF_OAUTH_CLIENT_ID: "boxox-test-client", BOXOX_SIGNING_SECRET: "test-connection-encryption-secret", PUBLIC_URL: origin, CF_API_TOKEN: undefined };
 const cookieOf = (response: Response) => response.headers.get("set-cookie")!.split(";")[0]!;
 beforeEach(async () => { vi.restoreAllMocks(); await env.DB.prepare("DELETE FROM cloudflare_connections").run(); });
 function client(options: { role?: string; user?: string; invalidRefresh?: boolean; failRefresh?: boolean; expiresIn?: number; omitRefresh?: boolean } = {}) {

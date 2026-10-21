@@ -64,8 +64,20 @@ export const labelRoutes = new Hono<AppContext>()
     if (parsed.data.name !== undefined) patch.name = parsed.data.name;
     if (parsed.data.color !== undefined) patch.color = parsed.data.color;
     if (!Object.keys(patch).length) return c.json({ error: { code: "bad_request", message: "Nothing to change" } }, 400);
+    // Labels are shared by everyone on the install, so renaming one changes
+    // what every other reader sees. Only the owner or the label's creator may.
+    const [current] = await db
+      .select({ id: labels.id, createdBy: labels.createdBy })
+      .from(labels)
+      .where(eq(labels.id, c.req.param("labelId")))
+      .limit(1);
+    if (!current) return c.json({ error: { code: "not_found", message: "No such label" } }, 404);
+    const role = c.get("orgRole");
+    if (role !== "owner" && role !== "admin" && current.createdBy !== c.get("user").id) {
+      return c.json({ error: { code: "forbidden", message: "Only the owner or the label's creator can change it" } }, 403);
+    }
     try {
-      const updated = await db.update(labels).set(patch).where(eq(labels.id, c.req.param("labelId"))).returning();
+      const updated = await db.update(labels).set(patch).where(eq(labels.id, current.id)).returning();
       if (!updated[0]) return c.json({ error: { code: "not_found", message: "No such label" } }, 404);
       const { id, name, color } = updated[0];
       return c.json({ label: { id, name, color } });

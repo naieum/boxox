@@ -14,7 +14,7 @@ import type { AppContext } from "../middleware";
  * which the frame uses only after the reader allows images.
  */
 
-export type SignedUrlEnv = Pick<Env, "AGENT_JWT_SECRET">;
+export type SignedUrlEnv = Pick<Env, "BOXOX_SIGNING_SECRET">;
 
 /** "direct": redirect at once. "warn": warning page first. "disabled": no links (Quarantine). */
 export type LinkMode = "direct" | "warn" | "disabled";
@@ -38,9 +38,9 @@ function fromB64url(s: string): Uint8Array {
   return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
 }
 
-/** Derived from AGENT_JWT_SECRET with its own label, like the tracking key. */
+/** Derived from BOXOX_SIGNING_SECRET with its own label, like the tracking key. */
 export async function urlSigningKey(env: SignedUrlEnv, label: string): Promise<CryptoKey | null> {
-  const secret = env.AGENT_JWT_SECRET?.trim();
+  const secret = env.BOXOX_SIGNING_SECRET?.trim();
   if (!secret) return null;
   const root = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const derived = await crypto.subtle.sign("HMAC", root, enc.encode(label));

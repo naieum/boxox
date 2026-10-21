@@ -53,7 +53,7 @@ export class FreeRuntime extends DurableObject<Env> {
   async deliverWebhook(body: unknown) {
     const id = (body as { deliveryId?: unknown } | null)?.deliveryId;
     if (typeof id !== "string") return;
-    const result = await attemptDelivery(createDb(this.env), id);
+    const result = await attemptDelivery(this.env, createDb(this.env), id);
     if (result.kind === "retry") await this.env.WEBHOOK_QUEUE.send({ deliveryId: id }, { delaySeconds: Math.ceil(result.delayMs / 1000) });
   }
 }

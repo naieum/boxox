@@ -22,7 +22,7 @@ async function fixture(fail = false) {
   const grantId = id();
   await db.insert(addressGrants).values({ id: grantId, addressId: mailbox.addressId, organizationId: mailbox.orgId, principalType: "agent", principalId: agentId, permissions: ["read", "send_new"], createdBy: "owner@example.test" });
   const calls: unknown[] = [];
-  const bindings = { ...env, AGENT_JWT_SECRET: secret, EMAIL: { async send(message: unknown) { calls.push(message); if (fail) throw new Error("transport failed"); return { messageId: `<${id()}@test>` }; } } } as unknown as Env;
+  const bindings = { ...env, AGENT_JWT_SECRET: secret, BOXOX_SIGNING_SECRET: secret, EMAIL: { async send(message: unknown) { calls.push(message); if (fail) throw new Error("transport failed"); return { messageId: `<${id()}@test>` }; } } } as unknown as Env;
   const { token } = await mintAgentToken(bindings, agentId, mailbox.orgId);
   const body = { fromAddressId: mailbox.addressId, to: ["customer@example.test"], subject: "Receipt", text: "Order received", idempotencyKey: id() };
   const send = (over: Record<string, unknown> = {}, headers: Record<string, string> = {}) => app.request("/send", { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json", ...headers }, body: JSON.stringify({ ...body, ...over }) }, bindings);

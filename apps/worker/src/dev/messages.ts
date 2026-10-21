@@ -38,7 +38,7 @@ const ALLOWED_HEADERS = new Set(
 
 export class MessageError extends Error {
   constructor(
-    readonly status: 400 | 403 | 404 | 409 | 422 | 429,
+    readonly status: 400 | 403 | 404 | 409 | 422 | 429 | 503,
     readonly code: string,
     message: string,
     readonly param?: string,

@@ -112,9 +112,13 @@ The helper finds or creates these account resources:
 
 Wrangler also deploys the Workflows, Durable Object, and declared bindings.
 The helper writes account resource IDs to ignored `.wrangler/deploy/wrangler.json`.
-It creates `AGENT_JWT_SECRET` on the first deployment and removes the temporary secret file after deployment.
-Existing signing secrets remain in place.
-This secret signs agent credentials. Do not rotate it as a routine update.
+It creates two secrets on the first deployment and removes the temporary secret file after deployment:
+`AGENT_JWT_SECRET`, which signs agent credentials and nothing else, and `BOXOX_SIGNING_SECRET`, which derives
+every other key (signed links and images in mail, tracking tokens, raw-download URLs, the domain-connection
+cookie, Cloudflare OAuth token sealing, webhook secret sealing). Existing secrets remain in place; a later
+deployment adds only whichever one is missing. Do not rotate either as a routine update: rotating
+`AGENT_JWT_SECRET` signs every agent out, and rotating `BOXOX_SIGNING_SECRET` breaks links in already-sent
+mail and makes sealed OAuth tokens and webhook secrets unreadable.
 
 The helper reuses resource names in the same account.
 Review existing resources before installing. The defaults assume one Box Ox installation per account.

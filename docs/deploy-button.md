@@ -78,11 +78,12 @@ Fill the application fields shown by the deployment form:
 | `CF_ACCOUNT_ID` | The account ID selected for this installation. |
 | `OWNER_EMAIL` | The email address you will use with Cloudflare Access. |
 | `CF_API_TOKEN` | A temporary [domain setup token](https://boxox.dev/docs/owner-access/#create-the-setup-token). This is separate from the deployment token. |
-| `AGENT_JWT_SECRET` | A private value generated with `openssl rand -base64 32`. Preserve it when updating. |
+| `AGENT_JWT_SECRET` | A private value generated with `openssl rand -base64 32`. It signs agent credentials only. Preserve it when updating. |
+| `BOXOX_SIGNING_SECRET` | A second, different private value from `openssl rand -base64 32`. It derives every other key: signed links and images in mail, tracking, download links, sealed tokens. Preserve it when updating. |
 | `BOXOX_EDITION`, Free template only | Keep `free`. Use the Paid button if you need the full profile. |
 
 `CF_ACCOUNT_ID`, `OWNER_EMAIL`, and `BOXOX_EDITION` are non-secret Wrangler variables.
-`CF_API_TOKEN` and `AGENT_JWT_SECRET` are Worker secrets.
+`CF_API_TOKEN`, `AGENT_JWT_SECRET`, and `BOXOX_SIGNING_SECRET` are Worker secrets.
 Build variables and Worker runtime secrets have separate scopes.
 If you override `CF_ACCOUNT_ID` or `OWNER_EMAIL` in Builds, those build values take precedence over the form's Wrangler values.
 For token and variable configuration, see [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).

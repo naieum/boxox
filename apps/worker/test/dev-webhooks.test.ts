@@ -10,10 +10,13 @@ import {
   AUTO_DISABLE_AFTER,
   checkTargetUrl,
   emitWebhookEvent,
+  isSealedWebhookSecret,
   MAX_ATTEMPTS,
+  resealWebhookSecrets,
   RETRY_SCHEDULE_MS,
   signatureHeaders,
   signPayload,
+  unsealWebhookSecret,
   type AttemptLogEntry,
   type WebhookQueueMessage,
 } from "../src/dev/webhooks";
@@ -65,7 +68,7 @@ function fakeEndpoint(status: number | (() => number)) {
 
 function harness() {
   const queue = fakeQueue();
-  const env = { DB, WEBHOOK_QUEUE: queue.binding };
+  const env = { DB, WEBHOOK_QUEUE: queue.binding, BOXOX_SIGNING_SECRET: "local-test-signing-secret-0000000000" };
   let clock = Date.parse("2026-10-01T00:00:00Z");
   /** Runs the next queued message through the consumer, with the clock at its delay. */
   async function next(endpoint: ReturnType<typeof fakeEndpoint>) {
@@ -142,6 +145,42 @@ async function verify(secret: string, req: { headers: Headers; body: string }) {
 }
 
 describe("dev webhooks", () => {
+  it("stores signing secrets encrypted, re-seals legacy rows, and never sends unsigned", async () => {
+    const s = await setup();
+    const [row] = await db.select().from(webhooks).where(eq(webhooks.id, s.hook.id));
+    expect(isSealedWebhookSecret(row!.secret)).toBe(true);
+    expect(row!.secret).not.toContain(s.hook.secret!.slice("whsec_".length));
+    expect(await unsealWebhookSecret(s.env, row!.secret)).toBe(s.hook.secret);
+    expect(await unsealWebhookSecret({}, row!.secret)).toBeNull();
+
+    // A row written before sealing existed is readable as it is, and the sweep encrypts it.
+    const legacy = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw";
+    await db.update(webhooks).set({ secret: legacy }).where(eq(webhooks.id, s.hook.id));
+    expect(await resealWebhookSecrets(s.env, db)).toBeGreaterThanOrEqual(1);
+    const [sealed] = await db.select().from(webhooks).where(eq(webhooks.id, s.hook.id));
+    expect(isSealedWebhookSecret(sealed!.secret)).toBe(true);
+    expect(sealed!.secret).not.toContain(legacy.slice("whsec_".length));
+    expect(await unsealWebhookSecret(s.env, sealed!.secret)).toBe(legacy);
+    expect(await resealWebhookSecrets(s.env, db)).toBe(0);
+
+    // Deliveries sign with the decrypted value.
+    await emitWebhookEvent(s.env, s.domainId, "message.delivered", { id: "m-sealed" });
+    const ok = fakeEndpoint(200);
+    await s.next(ok);
+    expect(await verify(legacy, ok.requests[0]!)).toBe(true);
+    expect((await deliveryRows(s.hook.id)).map((d) => d.status)).toEqual(["succeeded"]);
+
+    // Without the key the delivery is held back rather than sent without a signature.
+    await emitWebhookEvent(s.env, s.domainId, "message.delivered", { id: "m-unsigned" });
+    const m = s.queue.pending.shift()!;
+    const silent = fakeEndpoint(204);
+    const batch = { queue: "webhook-delivery", messages: [{ id: crypto.randomUUID(), body: m.body, ack: () => {}, retry: () => {} }] } as unknown as MessageBatch<unknown>;
+    await handleWebhookDeliveries(batch, { DB, WEBHOOK_QUEUE: s.queue.binding }, { fetch: silent.fetch, now: s.now });
+    expect(silent.requests).toHaveLength(0);
+    const [delivery] = (await deliveryRows(s.hook.id)).filter((d) => d.status === "pending" && d.attempts === 1);
+    expect((delivery!.attemptLog as AttemptLogEntry[]).at(-1)?.error).toBe("signing secret unavailable");
+  });
+
   it("signatures match the Standard Webhooks test vectors", async () => {
     // From the Standard Webhooks spec's reference test suite.
     const secret = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw";

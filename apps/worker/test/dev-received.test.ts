@@ -21,7 +21,7 @@ import { id } from "./helpers/seed";
 const ORG = "owner";
 const OWNER = { type: "owner" as const, email: "owner@example.test" };
 const PUBLIC_URL = "https://mail.example.test";
-const AGENT_JWT_SECRET = "test-only-signing-secret-not-real";
+const BOXOX_SIGNING_SECRET = "test-only-signing-secret-not-real";
 
 let DB: D1Database;
 let MAIL_STORE: R2Bucket;
@@ -49,7 +49,7 @@ function call(method: string, path: string, key?: string, body?: unknown) {
       headers: { "content-type": "application/json", ...(key ? { authorization: `Bearer ${key}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     },
-    { DB, MAIL_STORE, PUBLIC_URL, AGENT_JWT_SECRET },
+    { DB, MAIL_STORE, PUBLIC_URL, BOXOX_SIGNING_SECRET },
   );
 }
 
@@ -235,7 +235,7 @@ describe("receiving API", () => {
     expect((await call("GET", "/dev/v1/received/raw/not-a-token")).status).toBe(404);
 
     // It expires.
-    const rawEnv = { DB, PUBLIC_URL, AGENT_JWT_SECRET };
+    const rawEnv = { DB, PUBLIC_URL, BOXOX_SIGNING_SECRET };
     expect(await resolveRawToken(rawEnv, token, Date.now() + 60_000)).not.toBeNull();
     expect(await resolveRawToken(rawEnv, token, Date.now() + 121_000)).toBeNull();
     vi.useFakeTimers({ now: Date.now() + 121_000, toFake: ["Date"] });
