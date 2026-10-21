@@ -10,7 +10,7 @@ Review the [Workers Free and Paid requirements](https://boxox.dev/requirements/)
 Box Ox uses one download. The installer selects a Free inbox profile or the full Paid profile.
 Read the [Free profile guide](https://boxox.dev/docs/free/) for included features and preview limits.
 
-Use Node.js 22 or later, pnpm 10.25.0, Git, a Bash shell, and a Cloudflare account with R2 enabled. Workers Paid is needed for the full profile.
+Use Node.js 22 or later on a current security release (22.23.4, 24.22.1 or 26.12.1 and newer as of October 21, 2026; odd-numbered lines such as 25 are unsupported), pnpm 10.25.0, Git, a Bash shell, and a Cloudflare account with R2 enabled. Workers Paid is needed for the full profile.
 The root deployment helper is a Bash script. On Windows, use a configured Bash environment such as WSL.
 The web app can run at `boxox.<your-account-subdomain>.workers.dev`; a custom website domain is optional.
 The installer can register a free account subdomain through Cloudflare's API when none exists.

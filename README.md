@@ -59,7 +59,7 @@ See [agent automation](docs/agent-automation.md) and [2.4.0 changes](docs/releas
 
 ## Install
 
-Requirements: Node.js 22+, pnpm 10.25.0, Git, Bash, a Cloudflare account with R2 activated, and Cloudflare Access.
+Requirements: Node.js 22 or later on a current security release (22.23.4, 24.22.1 or 26.12.1 and newer as of October 21, 2026; odd-numbered lines such as 25 are unsupported), pnpm 10.25.0, Git, Bash, a Cloudflare account with R2 activated, and Cloudflare Access.
 Choose Workers Free for the inbox preview or Workers Paid for the full profile.
 Mail needs a domain on Cloudflare DNS. The app can run before you connect one.
 
@@ -161,7 +161,7 @@ AI reply suggestions enter an editable composer. Selecting one does not send mai
 
 Use **Developer** for domain keys, templates, message logs, received mail, and signed webhook deliveries.
 Read the [developer API and SDK guide](docs/api/README.md).
-Download the standalone CLI from [boxox.dev](https://boxox.dev/#developer-tools) and run it with Node.js 22+.
+Download the standalone CLI from [boxox.dev](https://boxox.dev/#developer-tools) and run it with Node.js 22 or later on a current security release.
 You can also install the direct `.tgz` download with your package manager. The SDK and agent skill are available there too.
 
 MCP uses `/mcp` with OAuth, PKCE, owner-approved clients, and revocation.
