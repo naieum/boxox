@@ -58,7 +58,7 @@ function call(path: string, opts: { method?: string; body?: unknown; browser?: B
   const method = opts.method ?? "POST";
   const headers: Record<string, string> =
     method === "GET" ? {} : { "content-type": "application/json", origin: ORIGIN, [CSRF_HEADER]: "1", ...opts.headers };
-  const bindings = { ...env, AGENT_JWT_SECRET: SECRET, BROWSER: opts.browser ?? undefined };
+  const bindings = { ...env, BOXOX_SIGNING_SECRET: SECRET, BROWSER: opts.browser ?? undefined };
   return app.request(
     `${ORIGIN}${path}`,
     { method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body), redirect: "manual" },
@@ -70,7 +70,7 @@ const preview = (body: unknown, browser?: BrowserRun | null, headers?: Record<st
   call(`/api/orgs/${mailbox.orgId}/preview/link`, { body, browser, headers });
 
 async function linkToken(url: string, warn = false) {
-  const key = await urlSigningKey({ AGENT_JWT_SECRET: SECRET }, "boxox:link:v1");
+  const key = await urlSigningKey({ BOXOX_SIGNING_SECRET: SECRET }, "boxox:link:v1");
   return (await signLinkToken(key!, url, warn))!;
 }
 

@@ -15,7 +15,7 @@ import { emitWebhookEvent, type WebhookEnv } from "./webhooks";
  * download link can be handed to another process without the API key.
  */
 
-export type RawUrlEnv = Pick<Env, "AGENT_JWT_SECRET" | "PUBLIC_URL">;
+export type RawUrlEnv = Pick<Env, "BOXOX_SIGNING_SECRET" | "PUBLIC_URL">;
 
 export const DEFAULT_RAW_TTL_S = 15 * 60;
 export const MAX_RAW_TTL_S = 3600;
@@ -42,9 +42,9 @@ function fromB64url(s: string): Uint8Array {
   return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
 }
 
-/** Derived from AGENT_JWT_SECRET with its own label, like the tracking key. */
+/** Derived from BOXOX_SIGNING_SECRET with its own label, like the tracking key. */
 async function signingKey(env: RawUrlEnv): Promise<CryptoKey | null> {
-  const secret = env.AGENT_JWT_SECRET?.trim();
+  const secret = env.BOXOX_SIGNING_SECRET?.trim();
   if (!secret) return null;
   const root = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const derived = await crypto.subtle.sign("HMAC", root, enc.encode("boxox:received-raw:v1"));
@@ -243,7 +243,7 @@ export async function rawDownloadUrl(env: RawUrlEnv & Pick<Env, "DB">, key: Auth
   const base = env.PUBLIC_URL?.trim().replace(/\/+$/, "");
   const expires = Math.floor(now / 1000) + Math.min(Math.max(Math.floor(ttlSeconds), 60), MAX_RAW_TTL_S);
   const token = await signRawToken(env, { m: row.id, k: key.id, e: expires });
-  if (!token || !base) throw new MessageError(409, "not_configured", "Raw downloads need PUBLIC_URL and AGENT_JWT_SECRET on this install");
+  if (!token || !base) throw new MessageError(409, "not_configured", "Raw downloads need PUBLIC_URL and BOXOX_SIGNING_SECRET on this install");
   return {
     url: `${base}/dev/v1/received/raw/${token}`,
     expiresAt: new Date(expires * 1000).toISOString(),

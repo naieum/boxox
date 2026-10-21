@@ -33,7 +33,7 @@ const EMAIL = {
 } as unknown as SendEmail;
 
 function testEnv(): Env {
-  return { ...env, AGENT_JWT_SECRET: SECRET, EMAIL } as Env;
+  return { ...env, AGENT_JWT_SECRET: SECRET, BOXOX_SIGNING_SECRET: SECRET, EMAIL } as Env;
 }
 
 const app = new Hono<AgentEnv>()

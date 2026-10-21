@@ -41,7 +41,15 @@ export const requireOwner = createMiddleware<AppContext>(async (c, next) => {
   await next();
 });
 
-/** Requires :orgId param; scopes the request to it with the identity's role. */
+/**
+ * Requires :orgId param; scopes the request to it with the identity's role.
+ *
+ * Single-tenant: there is no membership table. Everyone the Access policy
+ * admits is a "member", and what they can see is decided per route by their
+ * address grants (services/access.ts). The orgId segment is not validated
+ * against anything, so every query must still filter by it; a future
+ * multi-organization change must add a real membership check here.
+ */
 export const requireOrgMember = createMiddleware<AppContext>(async (c, next) => {
   const orgId = c.req.param("orgId");
   if (!orgId) {

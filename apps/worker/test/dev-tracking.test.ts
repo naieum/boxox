@@ -40,7 +40,7 @@ const HTML =
 const app = new Hono<{ Bindings: Env }>().route("/t", trackingRoutes);
 
 function get(path: string, env: Partial<Env> = {}) {
-  return app.request(path, { headers: { "user-agent": "TestMail/1.0" } }, { DB, AGENT_JWT_SECRET: SECRET, PUBLIC_URL, ...env });
+  return app.request(path, { headers: { "user-agent": "TestMail/1.0" } }, { DB, BOXOX_SIGNING_SECRET: SECRET, PUBLIC_URL, ...env });
 }
 
 async function seedDomain(track: { opens?: boolean; clicks?: boolean } = {}) {
@@ -72,7 +72,7 @@ async function sendTracked(domainId: string, track: { opens?: boolean; clicks?: 
     trackClicks: track.clicks ?? false,
   });
   const email = { send: vi.fn(async (_msg: EmailMessageBuilder) => ({ messageId: `<${id}@example.test>` })) };
-  const env = { DB, MAIL_STORE, EMAIL: email as unknown as SendEmail, AGENT_JWT_SECRET: SECRET, PUBLIC_URL };
+  const env = { DB, MAIL_STORE, EMAIL: email as unknown as SendEmail, BOXOX_SIGNING_SECRET: SECRET, PUBLIC_URL };
   expect(await runApiSend(env, { kind: "api", messageId: id }, step)).toBe("sent");
   return { id, html: (email.send.mock.calls[0]![0] as unknown as { html: string }).html };
 }
@@ -92,9 +92,9 @@ describe("dev tracking", () => {
     expect(plain.html).not.toContain("/t/");
 
     const opts = { messageId: "m", opens: false, clicks: false };
-    expect(await instrumentHtml({ AGENT_JWT_SECRET: SECRET, PUBLIC_URL }, HTML, opts)).toBe(HTML);
+    expect(await instrumentHtml({ BOXOX_SIGNING_SECRET: SECRET, PUBLIC_URL }, HTML, opts)).toBe(HTML);
     // Turned on but unconfigured: nothing is rewritten rather than pointing at a bad host.
-    expect(await instrumentHtml({ AGENT_JWT_SECRET: SECRET }, HTML, { ...opts, opens: true, clicks: true })).toBe(HTML);
+    expect(await instrumentHtml({ BOXOX_SIGNING_SECRET: SECRET }, HTML, { ...opts, opens: true, clicks: true })).toBe(HTML);
 
     // Per message: only what was asked for.
     const opensOnly = await sendTracked(await seedDomain(), { opens: true });
@@ -110,7 +110,7 @@ describe("dev tracking", () => {
     expect(trackingUrls(domainWide.html, "o")).toHaveLength(0);
     expect(domainWide.html).not.toContain("shop.example.com");
     expect(domainWide.html).toContain('href="mailto:help@example.com"');
-    expect(await verifyToken({ AGENT_JWT_SECRET: SECRET }, clicks[0]!.slice("/t/c/".length))).toEqual({
+    expect(await verifyToken({ BOXOX_SIGNING_SECRET: SECRET }, clicks[0]!.slice("/t/c/".length))).toEqual({
       m: domainWide.id,
       u: "https://shop.example.com/order?id=7&t=secret",
       l: 0,
@@ -138,7 +138,7 @@ describe("dev tracking", () => {
       expect(res.headers.get("location"), path).toBeNull();
     }
     // A link signed by another install's secret is just as unsigned here.
-    const other = await get(signed!, { AGENT_JWT_SECRET: "a-different-install-secret-0000000000" });
+    const other = await get(signed!, { BOXOX_SIGNING_SECRET: "a-different-install-secret-0000000000" });
     expect(other.status).toBe(404);
     expect(await eventsFor(id)).toEqual([expect.objectContaining({ type: "sent" })]);
 

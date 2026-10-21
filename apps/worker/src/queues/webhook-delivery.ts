@@ -21,7 +21,7 @@ export async function handleWebhookDeliveries(
       continue;
     }
     try {
-      const outcome = await attemptDelivery(db, deliveryId, deps);
+      const outcome = await attemptDelivery(env, db, deliveryId, deps);
       if (outcome.kind === "retry") {
         await env.WEBHOOK_QUEUE.send({ deliveryId }, { delaySeconds: Math.ceil(outcome.delayMs / 1000) });
       }

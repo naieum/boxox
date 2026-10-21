@@ -11,7 +11,7 @@ import { fanoutMessageEvent, type EventFanoutEnv } from "./event-fanout";
  * /t/o/ pixel; only URLs we signed are ever followed, so there is no open redirect.
  */
 
-export type TrackingEnv = Pick<Env, "AGENT_JWT_SECRET" | "PUBLIC_URL">;
+export type TrackingEnv = Pick<Env, "BOXOX_SIGNING_SECRET" | "PUBLIC_URL">;
 
 interface TokenPayload {
   /** api_messages.id */
@@ -35,9 +35,9 @@ function fromB64url(s: string): Uint8Array {
   return Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
 }
 
-/** A key of its own, derived from AGENT_JWT_SECRET so tracking needs no extra secret. */
+/** A key of its own, derived from BOXOX_SIGNING_SECRET so tracking needs no extra secret. */
 async function signingKey(env: TrackingEnv): Promise<CryptoKey | null> {
-  const secret = env.AGENT_JWT_SECRET?.trim();
+  const secret = env.BOXOX_SIGNING_SECRET?.trim();
   if (!secret) return null;
   const root = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const derived = await crypto.subtle.sign("HMAC", root, enc.encode("boxox:tracking:v1"));

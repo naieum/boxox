@@ -17,7 +17,10 @@
         "description": "Temporary domain setup token. This is separate from the Workers Builds deployment token. See https://boxox.dev/docs/deploy-button/."
       },
       "AGENT_JWT_SECRET": {
-        "description": "Generate a private signing secret with openssl rand -base64 32. Keep it stable across deployments."
+        "description": "Signs agent credentials only. Generate with openssl rand -base64 32 and keep it stable across deployments."
+      },
+      "BOXOX_SIGNING_SECRET": {
+        "description": "Root for every other key: signed links and images in mail, tracking, download links, sealed tokens. Generate a different value with openssl rand -base64 32 and keep it stable across deployments."
       }
     }
   },
@@ -52,6 +55,7 @@
       "@modelcontextprotocol/sdk@<1.31.0": "1.32.1",
       "sharp@>=0.35.0 <0.35.5": "0.35.5",
       "undici@>=7 <7.29.1": "7.29.1",
+      "vite@<6.4.4": "6.4.4",
       "@esbuild-kit/core-utils@3.3.2>esbuild": "0.25.12"
     }
   }

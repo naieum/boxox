@@ -4,7 +4,11 @@ import { domains } from "@boxox/db";
 import type { AppContext } from "../middleware";
 import { checkDomainHealth } from "../services/domain-health";
 
-/** Public DNS/configuration status only. Never return addresses, mail, or credentials. */
+/**
+ * Public DNS/configuration status only. Never return addresses, mail, or credentials.
+ * (The sibling GET /health in app.ts publishes BUILD_SHA on purpose: the source is
+ * public, and installers compare it against the release they deployed.)
+ */
 export function createPublicDomainHealthRoutes(fetcher: typeof fetch = (input, init) => fetch(input, init)) {
   return new Hono<AppContext>().get("/", async (c) => {
     const cached = await c.env.KV.get("public-domain-health", "json") as Record<string, string> | null;

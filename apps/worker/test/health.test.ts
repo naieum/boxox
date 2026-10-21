@@ -36,6 +36,7 @@ describe("deployment health", () => {
       ...env,
       BUILD_SHA: "test-source-commit",
       AGENT_JWT_SECRET: "never-return-this",
+      BOXOX_SIGNING_SECRET: "never-return-this-either",
     }, ctx);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, version: "test-source-commit" });

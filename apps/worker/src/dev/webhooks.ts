@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { webhookDeliveries, webhooks } from "@boxox/db";
+import { decryptSecret, encryptSecret, importMasterKey, type EncryptedSecret } from "../crypto";
 import type { Db } from "../db";
 import { createDb } from "../db";
 import type { Env } from "../env";
@@ -39,7 +40,9 @@ export const DEFAULT_ROTATION_OVERLAP_HOURS = 24;
 export const DELIVERY_TIMEOUT_MS = 15_000;
 
 export type WebhookQueueMessage = { deliveryId: string };
-export type WebhookEnv = Pick<Env, "DB" | "WEBHOOK_QUEUE"> & Partial<Pick<Env, "MAILBOX_HUB">>;
+/** What sealing a signing secret needs. Absent only in a dev install without agents. */
+export type WebhookSecretEnv = Partial<Pick<Env, "BOXOX_SIGNING_SECRET">>;
+export type WebhookEnv = Pick<Env, "DB" | "WEBHOOK_QUEUE"> & Partial<Pick<Env, "MAILBOX_HUB">> & WebhookSecretEnv;
 type WebhookRow = typeof webhooks.$inferSelect;
 type DeliveryRow = typeof webhookDeliveries.$inferSelect;
 export interface AttemptLogEntry {
@@ -67,6 +70,74 @@ export function generateWebhookSecret(): string {
   return SECRET_PREFIX + toB64(crypto.getRandomValues(new Uint8Array(24)));
 }
 
+// ---------------------------------------------------------------------------
+// Secrets at rest
+//
+// A signing secret has to be readable to sign, so it cannot be hashed like an
+// API key; but stored in plain text, anyone who can read D1 (a leaked account
+// token, a backup) could forge events to every endpoint. Rows are therefore
+// envelope-encrypted under a key derived from BOXOX_SIGNING_SECRET, with its own
+// label like the link and tracking keys. Rows written before sealing existed
+// still read (they start with `whsec_`); the hourly sweep re-seals them.
+
+const SEALED_PREFIX = "enc1:";
+const SEAL_LABEL = "boxox:webhook-secret:v1:";
+
+async function sealingKey(env: WebhookSecretEnv): Promise<CryptoKey | null> {
+  const secret = env.BOXOX_SIGNING_SECRET?.trim();
+  if (!secret) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(SEAL_LABEL + secret));
+  return importMasterKey(toB64(new Uint8Array(digest)));
+}
+
+export function isSealedWebhookSecret(stored: string): boolean {
+  return stored.startsWith(SEALED_PREFIX);
+}
+
+/** The database form of a signing secret. Fails closed: never falls back to plain text. */
+export async function sealWebhookSecret(env: WebhookSecretEnv, secret: string): Promise<string> {
+  const key = await sealingKey(env);
+  if (!key) throw new MessageError(503, "webhooks_unconfigured", "Webhook secrets cannot be stored until BOXOX_SIGNING_SECRET is set");
+  const record = await encryptSecret(key, secret);
+  return SEALED_PREFIX + toB64(new TextEncoder().encode(JSON.stringify(record)));
+}
+
+/** The signing secret behind a stored value, or null when it cannot be read. */
+export async function unsealWebhookSecret(env: WebhookSecretEnv, stored: string): Promise<string | null> {
+  if (!isSealedWebhookSecret(stored)) return stored.startsWith(SECRET_PREFIX) ? stored : null;
+  const key = await sealingKey(env);
+  if (!key) return null;
+  try {
+    const record = JSON.parse(new TextDecoder().decode(fromB64(stored.slice(SEALED_PREFIX.length)))) as EncryptedSecret;
+    return await decryptSecret(key, record);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Re-encrypts secrets stored before sealing existed. Bounded per run and
+ * idempotent, so the hourly sweep can call it until nothing is left.
+ */
+export async function resealWebhookSecrets(env: WebhookSecretEnv, db: Db, limit = 100): Promise<number> {
+  if (!(await sealingKey(env))) return 0;
+  const rows = await db
+    .select({ id: webhooks.id, secret: webhooks.secret, previousSecret: webhooks.previousSecret })
+    .from(webhooks)
+    .where(or(sql`${webhooks.secret} NOT LIKE ${`${SEALED_PREFIX}%`}`, sql`${webhooks.previousSecret} NOT LIKE ${`${SEALED_PREFIX}%`}`))
+    .limit(limit);
+  let sealed = 0;
+  for (const row of rows) {
+    const set: Partial<typeof webhooks.$inferInsert> = {};
+    if (!isSealedWebhookSecret(row.secret)) set.secret = await sealWebhookSecret(env, row.secret);
+    if (row.previousSecret && !isSealedWebhookSecret(row.previousSecret)) set.previousSecret = await sealWebhookSecret(env, row.previousSecret);
+    if (!Object.keys(set).length) continue;
+    await db.update(webhooks).set(set).where(eq(webhooks.id, row.id));
+    sealed++;
+  }
+  return sealed;
+}
+
 /** `v1,<base64 HMAC-SHA256(id.timestamp.body)>`. */
 export async function signPayload(secret: string, id: string, timestamp: number, body: string): Promise<string> {
   const raw = secret.startsWith(SECRET_PREFIX) ? secret.slice(SECRET_PREFIX.length) : secret;
@@ -85,9 +156,18 @@ export async function signatureHeaders(secrets: string[], id: string, timestamp:
   };
 }
 
-function activeSecrets(hook: Pick<WebhookRow, "secret" | "previousSecret" | "previousSecretExpiresAt">, now: number): string[] {
-  const out = [hook.secret];
-  if (hook.previousSecret && hook.previousSecretExpiresAt && hook.previousSecretExpiresAt.getTime() > now) out.push(hook.previousSecret);
+async function activeSecrets(
+  env: WebhookSecretEnv,
+  hook: Pick<WebhookRow, "secret" | "previousSecret" | "previousSecretExpiresAt">,
+  now: number,
+): Promise<string[]> {
+  const out: string[] = [];
+  const current = await unsealWebhookSecret(env, hook.secret);
+  if (current) out.push(current);
+  if (hook.previousSecret && hook.previousSecretExpiresAt && hook.previousSecretExpiresAt.getTime() > now) {
+    const previous = await unsealWebhookSecret(env, hook.previousSecret);
+    if (previous) out.push(previous);
+  }
   return out;
 }
 
@@ -196,7 +276,7 @@ async function ownWebhook(db: Db, key: AuthenticatedKey, id: string): Promise<We
   return row;
 }
 
-export async function createWebhook(db: Db, key: AuthenticatedKey, raw: unknown) {
+export async function createWebhook(env: WebhookSecretEnv, db: Db, key: AuthenticatedKey, raw: unknown) {
   const input = parse(createWebhookSchema, raw);
   requireHttps(input.url);
   const secret = generateWebhookSecret();
@@ -207,7 +287,7 @@ export async function createWebhook(db: Db, key: AuthenticatedKey, raw: unknown)
       domainId: key.domainId!,
       url: input.url,
       events: input.events ?? [],
-      secret,
+      secret: await sealWebhookSecret(env, secret),
       createdBy: `key:${key.id}`,
     })
     .returning();
@@ -252,17 +332,20 @@ export async function deleteWebhook(db: Db, key: AuthenticatedKey, id: string) {
 }
 
 /** New secret now; the old one keeps signing alongside it until the overlap ends. */
-export async function rotateWebhookSecret(db: Db, key: AuthenticatedKey, id: string, raw: unknown, now = Date.now()) {
+export async function rotateWebhookSecret(env: WebhookSecretEnv, db: Db, key: AuthenticatedKey, id: string, raw: unknown, now = Date.now()) {
   const input = parse(rotateSchema, raw);
   const current = await ownWebhook(db, key, id);
   const overlapMs = (input.overlapHours ?? DEFAULT_ROTATION_OVERLAP_HOURS) * 3600_000;
   const secret = generateWebhookSecret();
+  // The outgoing secret is re-sealed on its way to previous_secret, so a row
+  // from before sealing existed stops being plain text here too.
+  const outgoing = overlapMs ? await unsealWebhookSecret(env, current.secret) : null;
   const [row] = await db
     .update(webhooks)
     .set({
-      secret,
-      previousSecret: overlapMs ? current.secret : null,
-      previousSecretExpiresAt: overlapMs ? new Date(now + overlapMs) : null,
+      secret: await sealWebhookSecret(env, secret),
+      previousSecret: outgoing ? await sealWebhookSecret(env, outgoing) : null,
+      previousSecretExpiresAt: outgoing ? new Date(now + overlapMs) : null,
       updatedAt: new Date(now),
     })
     .where(eq(webhooks.id, current.id))
@@ -419,7 +502,7 @@ export interface DeliverDeps {
  * One attempt at one delivery. Only the status code and a short error reach
  * the attempt log, never the response body. Redirects are not followed.
  */
-export async function attemptDelivery(db: Db, deliveryId: string, deps: DeliverDeps = {}): Promise<DeliveryOutcome> {
+export async function attemptDelivery(env: WebhookSecretEnv, db: Db, deliveryId: string, deps: DeliverDeps = {}): Promise<DeliveryOutcome> {
   const doFetch = deps.fetch ?? fetch;
   const now = deps.now ?? Date.now;
   const [row] = await db
@@ -436,10 +519,14 @@ export async function attemptDelivery(db: Db, deliveryId: string, deps: DeliverD
   let status: number | null = null;
   let error: string | undefined;
   const problem = hook.status !== "active" ? "endpoint disabled" : checkTargetUrl(hook.url);
+  const secrets = problem ? [] : await activeSecrets(env, hook, started);
   if (problem) {
     error = problem;
+  } else if (!secrets.length) {
+    // Never send unsigned. Treated like a transient failure so it retries once the secret is readable.
+    error = "signing secret unavailable";
   } else {
-    const headers = await signatureHeaders(activeSecrets(hook, started), delivery.eventId, Math.floor(started / 1000), delivery.payload);
+    const headers = await signatureHeaders(secrets, delivery.eventId, Math.floor(started / 1000), delivery.payload);
     try {
       const res = await doFetch(hook.url, {
         method: "POST",

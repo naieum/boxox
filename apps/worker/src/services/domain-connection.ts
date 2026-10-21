@@ -13,8 +13,8 @@ const connectionSchema = z.object({ token: domainTokenSchema, user: z.string(), 
 
 const path = (c: Context<AppContext>) => `/api/orgs/${encodeURIComponent(c.get("orgId"))}/domains`;
 async function key(env: Env) {
-  if (!env.AGENT_JWT_SECRET) throw new Error("Domain connection encryption is unavailable");
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`boxox:domain-connection:v1:${env.AGENT_JWT_SECRET}`)));
+  if (!env.BOXOX_SIGNING_SECRET) throw new Error("Domain connection encryption is unavailable");
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`boxox:domain-connection:v1:${env.BOXOX_SIGNING_SECRET}`)));
   return importMasterKey(btoa(String.fromCharCode(...digest)));
 }
 

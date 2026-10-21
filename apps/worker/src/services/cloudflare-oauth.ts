@@ -27,13 +27,13 @@ function origin(env: Env) {
   return url.origin;
 }
 export function cloudflareOAuthConfigured(env: Env) {
-  try { return !!(env.CF_OAUTH_CLIENT_ID && env.CF_ACCOUNT_ID && env.AGENT_JWT_SECRET && origin(env)); } catch { return false; }
+  try { return !!(env.CF_OAUTH_CLIENT_ID && env.CF_ACCOUNT_ID && env.BOXOX_SIGNING_SECRET && origin(env)); } catch { return false; }
 }
 export function cloudflareOAuthScopes(env: Env) {
   return ["zone.read", "dns.write", "email-routing-rule.write", ...(isFree(env) ? [] : ["email-sending.write", "queues.write"]), "offline_access"];
 }
 async function key(env: Env) {
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes(`boxox:cloudflare-oauth:v1:${env.AGENT_JWT_SECRET}`)));
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes(`boxox:cloudflare-oauth:v1:${env.BOXOX_SIGNING_SECRET}`)));
   return importMasterKey(btoa(String.fromCharCode(...digest)));
 }
 async function seal(env: Env, value: unknown) { return JSON.stringify(await encryptSecret(await key(env), JSON.stringify(value))); }

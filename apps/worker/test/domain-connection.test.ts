@@ -8,7 +8,7 @@ import { DOMAIN_CONNECTION_SECONDS } from "../src/services/domain-connection";
 
 const ACCOUNT = "a".repeat(32), ZONE = "b".repeat(32), TOKEN = "fake-domain-connection-token";
 const origin = "https://mail.example.test";
-const testEnv = { ...env, CF_API_TOKEN: undefined, CF_ACCOUNT_ID: ACCOUNT, AGENT_JWT_SECRET: "test-domain-session-secret" };
+const testEnv = { ...env, CF_API_TOKEN: undefined, CF_ACCOUNT_ID: ACCOUNT, BOXOX_SIGNING_SECRET: "test-domain-session-secret" };
 const zone = { id: ZONE, name: "example.test", status: "active", account: { id: ACCOUNT } };
 afterEach(() => vi.restoreAllMocks());
 function client(role = "owner", user = "owner@example.test") {

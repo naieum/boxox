@@ -117,8 +117,14 @@ try {
   if (error.status !== 404) throw error
   secrets = []
 }
-if (!secrets.some(secret => secret.name === 'AGENT_JWT_SECRET')) {
-  writeFileSync(secretFile, JSON.stringify({ AGENT_JWT_SECRET: randomBytes(32).toString('base64') }), { mode: 0o600 })
-  console.log('Prepared a new agent signing secret for this initial deployment')
+// Two independent roots: AGENT_JWT_SECRET signs agent JWTs and nothing else;
+// BOXOX_SIGNING_SECRET derives every other key (links, tracking, sealing).
+const initialSecrets = {}
+for (const name of ['AGENT_JWT_SECRET', 'BOXOX_SIGNING_SECRET']) {
+  if (!secrets.some(secret => secret.name === name)) initialSecrets[name] = randomBytes(32).toString('base64')
+}
+if (Object.keys(initialSecrets).length) {
+  writeFileSync(secretFile, JSON.stringify(initialSecrets), { mode: 0o600 })
+  console.log(`Prepared new secrets for this deployment: ${Object.keys(initialSecrets).join(', ')}`)
 }
 console.log('Prepared installation resources and deployment configuration')

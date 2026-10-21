@@ -38,7 +38,7 @@ export const createDomainRoutes = (fetcher: typeof fetch = (input, init) => fetc
     .post("/connection", requireOwner, async (c) => {
       const parsed = z.object({ token: domainTokenSchema }).safeParse(await c.req.json().catch(() => null));
       if (!parsed.success) return c.json({ error: { code: "bad_request", message: "Enter a valid Cloudflare API token." } }, 400);
-      if (!c.env.CF_ACCOUNT_ID || !c.env.AGENT_JWT_SECRET) return c.json({ error: { code: "not_configured", message: "This installation needs its account and signing secret configured before connecting Cloudflare." } }, 503);
+      if (!c.env.CF_ACCOUNT_ID || !c.env.BOXOX_SIGNING_SECRET) return c.json({ error: { code: "not_configured", message: "This installation needs its account and signing secret configured before connecting Cloudflare." } }, 503);
       try {
         // Read-only: connection never changes a zone or mail records.
         await cloudflareClient({ ...c.env, CF_API_TOKEN: parsed.data.token }, fetcher).listZones();
@@ -56,7 +56,9 @@ export const createDomainRoutes = (fetcher: typeof fetch = (input, init) => fetc
     })
 
     // Initial setup and later domain additions share the same guarded onboarding service.
-    .get("/", async (c) => {
+    // Owner only: the sidebar fetches this for the owner alone, and members
+    // learn their domains from /addresses, which is filtered to their grants.
+    .get("/", requireOrgAdmin, async (c) => {
       const db = c.get("db");
       const orgId = c.get("orgId");
       const rows = await db
@@ -136,7 +138,8 @@ export const createDomainRoutes = (fetcher: typeof fetch = (input, init) => fetc
     })
 
     // Account-wide Email Sending quota; new accounts start in a small sandbox quota.
-    .get("/quota", async (c) => {
+    // Owner only: this reaches the Cloudflare API with the owner's credentials.
+    .get("/quota", requireOrgAdmin, async (c) => {
       if (isFree(c.env)) return c.json({ configured: false });
       const cf = cloudflareClient((await domainConnection(c, fetcher)).env, fetcher);
       if (!cf.configured) return c.json({ configured: false });
@@ -152,8 +155,9 @@ export const createDomainRoutes = (fetcher: typeof fetch = (input, init) => fetc
       });
     })
 
-    // Runs the DNS health check now and stores the result on the domain.
-    .post("/:domainId/health", async (c) => {
+    // Runs the DNS health check now and stores the result on the domain. Owner
+    // only: it spends DNS and Cloudflare API calls under the owner's credentials.
+    .post("/:domainId/health", requireOrgAdmin, async (c) => {
       const db = c.get("db");
       const orgId = c.get("orgId");
       const domainId = c.req.param("domainId");
@@ -249,7 +253,9 @@ export const createDomainRoutes = (fetcher: typeof fetch = (input, init) => fetc
     })
 
     // Addresses on a domain, with grants and unread counts.
-    .get("/:domainId/addresses", async (c) => {
+    // Owner only: this lists every grantee's email and permissions and unread
+    // counts for every mailbox, which a member must not be able to enumerate.
+    .get("/:domainId/addresses", requireOrgAdmin, async (c) => {
       const db = c.get("db");
       const orgId = c.get("orgId");
       const domainId = c.req.param("domainId");

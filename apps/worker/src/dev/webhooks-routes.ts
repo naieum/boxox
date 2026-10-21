@@ -50,7 +50,7 @@ export const devWebhookRoutes = new Hono<DevContext>()
   .use("*", requireApiKey)
   .use("*", requireDomainKey("webhooks"))
 
-  .post("/", (c) => reply(c, 201, async () => createWebhook(c.get("db"), c.get("apiKey"), await body(c))))
+  .post("/", (c) => reply(c, 201, async () => createWebhook(c.env, c.get("db"), c.get("apiKey"), await body(c))))
   .get("/", (c) => reply(c, 200, () => listWebhooks(c.get("db"), c.get("apiKey"))))
   .get("/listen", (c) => {
     if (c.req.header("upgrade") !== "websocket") {
@@ -62,7 +62,7 @@ export const devWebhookRoutes = new Hono<DevContext>()
   .patch("/:id", (c) => reply(c, 200, async () => updateWebhook(c.get("db"), c.get("apiKey"), c.req.param("id"), await body(c))))
   .delete("/:id", (c) => reply(c, 200, () => deleteWebhook(c.get("db"), c.get("apiKey"), c.req.param("id"))))
   .post("/:id/rotate", (c) =>
-    reply(c, 200, async () => rotateWebhookSecret(c.get("db"), c.get("apiKey"), c.req.param("id"), await body(c))),
+    reply(c, 200, async () => rotateWebhookSecret(c.env, c.get("db"), c.get("apiKey"), c.req.param("id"), await body(c))),
   )
   .post("/:id/test", (c) => reply(c, 202, () => sendTestEvent(c.env, c.get("apiKey"), c.req.param("id"))))
 

@@ -30,14 +30,14 @@ async function harness() {
   await db.insert(apiMessages).values({ id: messageId, domainId, fromEmail: `hello@${domain}`, toEmails: ["person@example.test"], subject: "Fanout", r2Key, trackOpens: true, trackClicks: true });
   const created = await createDomainKey(db, "owner", { type: "owner", email: "owner@example.test" }, { domainId, name: "observer", permissions: ["webhooks"] });
   const key = (await authenticateSecret(db, created.secret))!;
-  const hook = await createWebhook(db, key, { url: "https://hooks.example.test/mail", events: [] });
+  const hook = await createWebhook({ BOXOX_SIGNING_SECRET: "local-test-signing-secret-0000000000" }, db, key, { url: "https://hooks.example.test/mail", events: [] });
   const queued: WebhookQueueMessage[] = [], sent: EmailMessageBuilder[] = [];
   let failEnqueue = false;
   const binding = {
     async send(body: WebhookQueueMessage) { if (failEnqueue) throw new Error("simulated queue outage"); queued.push(body); },
     async sendBatch(messages: { body: WebhookQueueMessage }[]) { if (failEnqueue) throw new Error("simulated queue outage"); queued.push(...messages.map((m) => m.body)); },
   } as unknown as Queue<WebhookQueueMessage>;
-  const bindings = { ...env, WEBHOOK_QUEUE: binding, PUBLIC_URL: "https://mail.test", AGENT_JWT_SECRET: "local-test-signing-secret-0000000000",
+  const bindings = { ...env, WEBHOOK_QUEUE: binding, PUBLIC_URL: "https://mail.test", BOXOX_SIGNING_SECRET: "local-test-signing-secret-0000000000",
     EMAIL: { async send(message: EmailMessageBuilder) { sent.push(message); return { messageId: `<${messageId}@sending.test>` }; } } as unknown as SendEmail,
   };
   const app = new Hono<DevContext>().use("*", async (c, next) => { c.set("db", createDb(c.env)); await next(); })
