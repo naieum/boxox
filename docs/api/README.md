@@ -7,10 +7,10 @@ The Free inbox profile supports incoming-mail access and webhooks. Outbound requ
 ## Direct SDK and CLI downloads
 
 Box Ox self-publishes packages at https://boxox.dev/downloads/#developer-tools. Use the downloaded packages directly.
-Download `boxox-mail-0.1.0.tgz`, verify it against the published SHA256SUMS.txt, then run `npm install ./boxox-mail-0.1.0.tgz` (or the equivalent in your package manager).
+Download `boxox-mail-0.2.0.tgz`, verify it against the published SHA256SUMS.txt, then run `npm install ./boxox-mail-0.2.0.tgz` (or the equivalent in your package manager).
 
 The installed package name is `@boxox/mail`. The imports in this guide stay the same.
-The CLI package `boxox-cli-0.1.0.tgz` bundles the SDK and WebSocket client. Install the local file or run the standalone `boxox-cli-0.1.0.mjs` with Node.js 22+.
+The CLI package `boxox-cli-0.2.0.tgz` bundles the SDK and WebSocket client. Install the local file or run the standalone `boxox-cli-0.2.0.mjs` with Node.js 22+.
 
 Successful API sends appear in Sent and Developer logs. A received reply brings the conversation into Inbox. Mailbox copies have separate storage. Deleting one does not remove the API log.
 
