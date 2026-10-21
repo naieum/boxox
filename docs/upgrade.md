@@ -2,7 +2,7 @@
 
 An upgrade is the installer run again from newer source against the same installation. There is no separate upgrade command: `pnpm run deploy` reuses every resource that already exists, applies pending database migrations, uploads the new Worker, adds only the secrets that are missing, and checks that `/health` reports the deployed commit.
 
-This page covers installations made with the local installer and with the Deploy to Cloudflare button. To remove an installation instead, use the [uninstall guide](uninstall.md).
+This page covers installations made with the local installer and with the Deploy to Cloudflare button. To remove an installation instead, use the [uninstall guide](https://boxox.dev/docs/uninstall/).
 
 ## Before you upgrade
 
@@ -22,7 +22,7 @@ This page covers installations made with the local installer and with the Deploy
    pnpm --filter @boxox/worker exec vitest run
    ```
 
-5. Take a backup. Export mail as described under [Backups, export, and retention](setup.md#backups-export-and-retention), and record the current Worker version so you can roll back:
+5. Take a backup. Export mail as described under [Backups, export, and retention](https://boxox.dev/docs/backups/), and record the current Worker version so you can roll back:
 
    ```sh
    pnpm exec wrangler deployments list --name boxox
