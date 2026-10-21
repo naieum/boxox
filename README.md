@@ -80,6 +80,7 @@ Use `pnpm run deploy` explicitly. `pnpm deploy` invokes a different package-mana
 Wrangler OAuth handles deployment. A separate setup token authorizes DNS and email onboarding.
 The guide includes a [token template and permission checklist](docs/setup.md#create-the-setup-token).
 
+To update an installation, follow the [upgrade guide](docs/upgrade.md): rerun the installer from the newer source with the same settings.
 To remove an installation, follow the [uninstall guide](docs/uninstall.md).
 It includes a copyable agent prompt, a local resource inventory, mail export, access revocation, and deletion checks.
 

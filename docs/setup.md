@@ -335,6 +335,8 @@ Inspect the installed lifecycle rules before setting your backup schedule.
 For removal, use the [uninstall guide](https://boxox.dev/docs/uninstall/) and its copyable agent prompt.
 Keep mail by default. Review resource ownership and move incoming mail before removing its Worker.
 
+To move an existing installation to a newer version, follow the [upgrade guide](upgrade.md). The short form: check out the target release, then rerun `pnpm run deploy` with the same account, owner, URL and `BOXOX_PLAN`.
+
 Use reviewed release tags instead of `main`. The current release is unsigned.
 When a signed tag is available, verify its signature against a trusted maintainer identity.
 Inspect migrations and dependency changes before deploying. Back up the installation and run the workspace checks.
