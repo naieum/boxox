@@ -1,6 +1,8 @@
 {
   "name": "boxox-cli-test", "main": "worker.ts", "compatibility_date": "2026-06-01",
   "compatibility_flags": ["nodejs_compat"],
+  // Test-only root for webhook secret sealing; production gets a Worker secret from the installer.
+  "vars": { "BOXOX_SIGNING_SECRET": "cli-test-signing-root-not-a-real-secret" },
   "d1_databases": [{ "binding": "DB", "database_name": "boxox-cli-test", "database_id": "local-test" }],
   "r2_buckets": [{ "binding": "MAIL_STORE", "bucket_name": "boxox-cli-test" }],
   "durable_objects": { "bindings": [{ "name": "MAILBOX_HUB", "class_name": "MailboxHub" }] },
