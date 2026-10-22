@@ -71,7 +71,7 @@ Code rolls back; the database does not.
 
 ## Version notes
 
-### From 2.4.x to the current source
+### From 2.4.5 and earlier to 2.4.6
 
 - The installer generates `BOXOX_SIGNING_SECRET`. `AGENT_JWT_SECRET` now signs agent credentials only; every other key derives from the new secret. Nothing to do by hand.
 - Webhook signing secrets created before this release were stored in plain text. The five-minute recovery job re-encrypts them a batch at a time; existing endpoints keep receiving signed events throughout.
