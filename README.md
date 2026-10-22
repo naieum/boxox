@@ -25,7 +25,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 This repository contains the current Box Ox V2 application source and documentation.
 The marketing website source and its build tools are maintained separately. Earlier private development history is not included.
 
-**Release 2.4.4:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install).
+**Release 2.4.6:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install). This release hardens member-visible routes, encrypts webhook signing secrets, adds a second signing secret, and documents the upgrade path; read the [release notes](docs/release-2.4.6.md).
 The CLI and SDK are direct downloads. There are no npm registry packages to install.
 
 The 2.4.0 source installed in a fresh Workers Free account without domains, including owner sign-in and empty app pages.
@@ -33,7 +33,7 @@ The same empty installation later passed the agent removal procedure. Current in
 Mail delivery, populated-mail recovery, and Free throughput remain unverified in that fresh account.
 
 Cloudflare Access and mail-domain setup remain installation steps. A successful `/health` response alone does not prove mail delivery.
-Read the [release notes](docs/release-2.4.4.md) and verify the published checksums before installing.
+Read the [release notes](docs/release-2.4.6.md) and verify the published checksums before installing.
 
 ## Browse the source
 
