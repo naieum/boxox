@@ -7,19 +7,3 @@ docs/v2-plan.md export-ignore
 spikes export-ignore
 docs/spikes export-ignore
 docs/security-review.md export-ignore
-# The current release manifest describes this archive and lives outside it.
-apps/site/release-v2.0.1.json export-ignore
-apps/site/release-v2.1.0.json export-ignore
-apps/site/release-v2.1.1.json export-ignore
-apps/site/release-v2.1.2.json export-ignore
-apps/site/release-v2.2.0.json export-ignore
-apps/site/release-v2.3.0.json export-ignore
-apps/site/release-v2.4.0.json export-ignore
-apps/site/release-v2.4.1.json export-ignore
-apps/site/release-v2.4.2.json export-ignore
-apps/site/release-v2.4.3.json export-ignore
-apps/site/release-v2.4.4.json export-ignore
-apps/site/release-v2.4.5.json export-ignore
-apps/site/release-v2.4.6.json export-ignore
-apps/site/release-v2.4.7.json export-ignore
-apps/site/release-v2.4.8.json export-ignore
