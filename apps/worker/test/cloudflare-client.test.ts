@@ -136,6 +136,20 @@ describe("Cloudflare setup client", () => {
     expect(calls.some((c) => c.method !== "GET")).toBe(false);
   });
 
+  it("can enable receiving when the zone has no routing settings yet", async () => {
+    const { fetcher } = fakeCf({
+      "GET /zones": ok([zone]),
+      [`GET /zones/${ZONE_ID}/dns_records`]: ok([]),
+      [`GET /zones/${ZONE_ID}/email/routing`]: {
+        status: 404, response: { success: false, errors: [{ code: 1000, message: "Not configured" }] },
+      },
+      [`POST /zones/${ZONE_ID}/email/routing/enable`]: ok(routingSettings.response.result),
+      ...fromFixture(sendingSubdomains),
+    });
+    expect(await client(fetcher).onboardZone("boxox.dev", { routing: true }))
+      .toMatchObject({ status: "onboarded", routing: { enabled: true, status: "ready" } });
+  });
+
   it("warns before replacing existing MX records", async () => {
     const { fetcher, calls } = fakeCf({
       "GET /zones": ok([zone]),

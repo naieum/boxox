@@ -30,6 +30,7 @@ export class CloudflareApiError extends Error {
     message: string,
     readonly status: number,
     readonly errors: { code: number; message: string }[] = [],
+    readonly requiredPermission?: string,
   ) {
     super(message);
     this.name = "CloudflareApiError";
@@ -250,7 +251,9 @@ export class CloudflareClient {
     if (!res.ok || !json?.success) {
       const errors = json?.errors ?? [];
       const detail = errors.map((e) => `${e.code}: ${e.message}`).join("; ") || `HTTP ${res.status}`;
-      throw new CloudflareApiError(`Cloudflare API ${method} ${path} failed: ${detail}`, res.status, errors);
+      const requiredPermission = /^\/zones\/[^/]+\/email\/routing(?:\/dns|\/enable)?$/.test(path.split("?")[0]!)
+        ? "Zone Settings Write" : undefined;
+      throw new CloudflareApiError(`Cloudflare API ${method} ${path} failed: ${detail}`, res.status, errors, requiredPermission);
     }
     return json.result;
   }
@@ -381,6 +384,14 @@ export class CloudflareClient {
       const plan = await this.planMxReplacement(zone);
       if ((plan.foreignMx.length || plan.foreignSpf) && !opts.confirmMxReplacement) {
         return { status: "needs-confirmation", zone, plan };
+      }
+      // Check settings access before removing a previous provider's DNS.
+      // Rule-edit permission alone cannot read or enable Email Routing settings.
+      try {
+        await this.getRoutingSettings(zone.id);
+      } catch (err) {
+        // A zone without routing settings can still be enabled below.
+        if (!(err instanceof CloudflareApiError && err.status === 404)) throw err;
       }
       for (const r of plan.foreignMx) {
         await this.deleteDnsRecord(zone.id, r.id);
