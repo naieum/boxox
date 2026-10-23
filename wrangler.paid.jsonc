@@ -1,0 +1,134 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "boxox",
+  "main": "apps/worker/src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Fill these in the Deploy to Cloudflare form, or use deployment env vars.
+  "vars": {
+    "CF_ACCOUNT_ID": "",
+    "OWNER_EMAIL": ""
+  },
+  "assets": {
+    "directory": "apps/web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  // Resource ids are left out so `wrangler deploy` (via `pnpm run deploy`)
+  // provisions them in the installer's own account.
+  "send_email": [{ "name": "EMAIL" }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "boxox",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MAIL_STORE",
+      "bucket_name": "boxox-mail"
+    }
+  ],
+  // OAuth provider state and the OpenPhish feed.
+  "kv_namespaces": [{ "binding": "KV" }],
+  "ai": { "binding": "AI" },
+  "vectorize": [{ "binding": "VECTORS", "index_name": "boxox-search" }],
+  // Browser Run quick actions: link previews (on demand only) and PDF export.
+  "browser": { "binding": "BROWSER", "remote": true },
+  // cf-email-events: delivery, bounce and complaint events; the setup wizard
+  // subscribes each sending domain to it. webhook-delivery: developer webhooks.
+  "queues": {
+    "producers": [
+      { "binding": "WEBHOOK_QUEUE", "queue": "webhook-delivery" },
+      { "binding": "INGEST_QUEUE", "queue": "ingest-dispatch" }
+    ],
+    "consumers": [
+      {
+        "queue": "cf-email-events",
+        "max_batch_size": 50,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "dead_letter_queue": "cf-email-events-dlq"
+      },
+      {
+        // Retries are re-sent with the backoff delay; max_retries only covers handler crashes.
+        "queue": "webhook-delivery",
+        "max_batch_size": 10,
+        "max_batch_timeout": 1,
+        "max_retries": 3,
+        "dead_letter_queue": "webhook-delivery-dlq"
+      },
+      {
+        "queue": "ingest-dispatch",
+        "max_batch_size": 10,
+        "max_batch_timeout": 1,
+        "max_concurrency": 2,
+        "max_retries": 5,
+        "dead_letter_queue": "ingest-dispatch-dlq"
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "name": "boxox-ingest",
+      "binding": "INGEST_WORKFLOW",
+      "class_name": "IngestWorkflow"
+    },
+    {
+      "name": "boxox-enrich",
+      "binding": "ENRICH_WORKFLOW",
+      "class_name": "EnrichWorkflow"
+    },
+    {
+      "name": "boxox-send",
+      "binding": "SEND_WORKFLOW",
+      "class_name": "SendWorkflow"
+    },
+    {
+      "name": "boxox-snooze",
+      "binding": "SNOOZE_WORKFLOW",
+      "class_name": "SnoozeWorkflow"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "MAILBOX_HUB", "class_name": "MailboxHub" },
+      { "name": "FREE_RUNTIME", "class_name": "FreeRuntime" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["MailboxHub"] },
+    { "tag": "v2", "new_sqlite_classes": ["FreeRuntime"] }
+  ],
+  "ratelimits": [
+    {
+      // Bound aggregate ingest work even when an attacker rotates From headers.
+      "name": "INBOUND_GLOBAL_RATE_LIMIT",
+      "namespace_id": "1003",
+      "simple": { "limit": 300, "period": 60 }
+    },
+    {
+      // Per-sender inbound limit in email().
+      "name": "INBOUND_RATE_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 60, "period": 60 }
+    },
+    {
+      // Public agent endpoints (/pair, /token), per client or IP.
+      "name": "AGENT_RATE_LIMIT",
+      "namespace_id": "1002",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ],
+  "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "boxox" }],
+  // Nightly at 03:00 UTC: purge threads left in trash past the retention window.
+  // Every 6 h: refresh the OpenPhish feed into KV.
+  "triggers": {
+    "crons": ["0 3 * * *", "0 */6 * * *", "15 * * * *", "*/5 * * * *"]
+  },
+  "observability": {
+    "enabled": true
+  }
+}
