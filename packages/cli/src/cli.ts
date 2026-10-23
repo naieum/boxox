@@ -5,8 +5,9 @@ import { request as httpsRequest } from "node:https";
 import { setTimeout as sleep } from "node:timers/promises";
 import WebSocket from "ws";
 import { keychain, normalizeUrl, savedUrl, saveUrl, type Keychain } from "./credentials.js";
+import { mcpRequest } from "./mcp.js";
 
-export const VERSION = "0.2.0";
+export const VERSION = "0.3.0";
 
 export const HELP = `boxox — developer email tools
   login --url URL --key KEY|-       Save credentials in the OS keychain
@@ -20,6 +21,8 @@ export const HELP = `boxox — developer email tools
   webhooks create --url HTTPS_URL [--event EVENT]
   webhooks list | test ID
   webhooks listen --forward-to http://localhost:PORT/path --secret WHSEC [--once]
+  mcp request --url URL --mailbox EMAIL [--mailbox EMAIL] [--perm read|send|send_new|webhook|classify]
+  mcp request --url URL --grant PERMISSION:EMAIL [--grant PERMISSION:EMAIL] [--server-name NAME]
   agent me
   agent changes ADDRESS_ID [--cursor CURSOR] [--limit N]
   agent threads ADDRESS_ID | thread THREAD_ID [--cursor CURSOR] [--limit N]
@@ -34,6 +37,8 @@ export const HELP = `boxox — developer email tools
   doctor [--webhook ID]              Probe key capabilities; optionally queue a webhook test
 Credentials: BOXOX_URL / BOXOX_KEY override saved login. All output is JSON.
 Agent commands use BOXOX_AGENT_TOKEN (a short-lived bearer), never the saved developer key.
+MCP request prepares OAuth scopes and login arguments; it does not grant access or store credentials.
+--mailbox defaults to read; each --perm applies to every listed mailbox. Use --grant for different permissions per mailbox.
 Thread/message bodies require --include-body true. Agent claim receipts contain claim tokens.
 Creation and rotation print a one-time secret; capture it securely.
 Doctor links to /setup for infrastructure and reports permission-limited checks explicitly.
@@ -71,6 +76,7 @@ export async function run(args: string[], runtime: Runtime = {}): Promise<void> 
   const store = runtime.keychain ?? keychain;
   if (flags.help || !words.length) { output(HELP); return; }
   const permitted: Record<string, string[]> = {
+    "mcp request": ["url", "mailbox", "perm", "grant", "server-name"],
     "agent me": [], "agent changes": ["cursor", "limit"], "agent threads": ["cursor", "limit"],
     "agent thread": ["cursor", "limit", "include-body"], "agent message": ["include-body"],
     "agent pending": ["group", "cursor", "limit"], "agent claim": ["group", "lease-seconds"],
@@ -87,6 +93,11 @@ export async function run(args: string[], runtime: Runtime = {}): Promise<void> 
   const selected = ["login", "send", "doctor"].includes(words[0]!) ? words[0]! : words.slice(0, 2).join(" ");
   if (!permitted[selected]) throw new Error(`Unknown command: ${selected}. Run boxox --help.`);
   for (const flag of Object.keys(flags)) if (!permitted[selected]!.includes(flag)) throw new Error(`Unknown option --${flag} for ${selected}`);
+  if (selected === "mcp request") {
+    if (words.length !== 2) throw new Error("mcp request accepts mailbox choices as flags, not positional arguments");
+    output(mcpRequest({ url: required(flags, "url"), mailboxes: flags.mailbox, permissions: flags.perm, grants: flags.grant, serverName: value(flags, "server-name") }));
+    return;
+  }
   const url = normalizeUrl(words[0] === "login" ? required(flags, "url") : process.env.BOXOX_URL ?? await savedUrl() ?? "");
   if (words[0] === "login") {
     const raw = required(flags, "key"), key = raw === "-" ? await stdin() : raw;

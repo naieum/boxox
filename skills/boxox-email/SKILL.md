@@ -1,11 +1,13 @@
 ---
 name: boxox-email
-description: Create and review Box Ox email templates, add transactional sending and verified webhooks, or migrate a Resend integration to the Box Ox SDK and CLI. Use for application email integration; infrastructure setup belongs to the Box Ox setup wizard or Wrangler.
+description: Connect an agent to Box Ox mailboxes through MCP with requested permissions, read or reply to mail, create email templates, add transactional sending and verified webhooks, or migrate a Resend integration to the Box Ox SDK and CLI. Infrastructure setup belongs to the Box Ox setup wizard or Wrangler.
 metadata:
-  version: 0.4.0
+  version: 0.5.0
 ---
 
-Use the existing Box Ox install, the `@boxox/mail` SDK, and the `boxox` CLI. Download `https://boxox.dev/downloads/boxox-cli-0.2.0.tgz`, verify it against `https://boxox.dev/downloads/SHA256SUMS.txt`, and install the local tarball with the project's package manager if the CLI is missing; invoke its `boxox` binary through that package manager when installed locally. The SDK is the API contract; avoid hand-written HTTP calls to the developer API.
+Use the existing Box Ox install. Download `https://boxox.dev/downloads/boxox-cli-0.3.0.tgz`, verify it against `https://boxox.dev/downloads/RESOURCE-SHA256SUMS.txt`, and install the local tarball with the project's package manager if the CLI is missing; invoke its `boxox` binary through that package manager when installed locally. Packages are self-published by Box Ox; do not resolve them from the npm registry.
+
+For mailbox access, MCP connection requests, or reading and replying to mail, follow [references/mcp-access.md](references/mcp-access.md). This route uses mailbox grants rather than developer keys. For application sending, templates, and webhooks, use the sections below with the `@boxox/mail` SDK. The SDK is the developer API contract; avoid hand-written calls to that API.
 
 ## Establish credentials and scope
 

@@ -32,7 +32,7 @@ Automatic plan detection needs Billing Read. Wrangler OAuth does not include it.
 Your agent can use a separate read-only `BOXOX_BILLING_TOKEN` from your secret manager.
 If unavailable, check the Workers plan in Cloudflare and choose `BOXOX_PLAN=free` or `BOXOX_PLAN=paid`.
 The installer never purchases or changes a plan.
-Read the [Free profile guide](https://boxox.dev/docs/free/) for its features and preview limits.
+Read the [Workers Free guide](https://boxox.dev/docs/free/) for the inbox install’s features and testing status.
 
 Authorize your agent through the Cloudflare tools you use.
 Deployment credentials and the temporary domain-setup token are separate from Box Ox mail keys.
@@ -63,5 +63,7 @@ The remote MCP endpoint runs on your Worker. The CLI runs on your computer or CI
 Approve the agent’s OAuth and mailbox grants, or create a mail key scoped to its task.
 These permissions do not grant Cloudflare account administration.
 
-For application email, download the [email skill](https://boxox.dev/downloads/boxox-email-skill-0.4.0.zip).
+Use [llms.txt](https://boxox.dev/llms.txt) as the discovery entry point. The [agent runbook](https://boxox.dev/install-agent.md) includes CLI and skill installation and the MCP connection flow, with a direct path for existing installations.
+
+Install CLI 0.3.0 and the [email skill 0.5.0](https://boxox.dev/downloads/boxox-email-skill-0.5.0.zip), verified against the [tool checksums](https://boxox.dev/downloads/RESOURCE-SHA256SUMS.txt). Prepare the exact mailbox permissions with `boxox mcp request` before OAuth. MCP runs on your existing Worker; the agent configures its client endpoint and verifies mailbox grants after approval. SDK 0.2.0 is only needed for application integration.
 Template agents must follow the [email design review](https://boxox.dev/docs/email-design/).
