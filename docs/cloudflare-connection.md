@@ -24,10 +24,28 @@ Select these scopes:
 
 | Profile | Required scopes |
 | --- | --- |
-| Free | `zone.read`, `dns.write`, `email-routing-rule.write` |
+| Free | `zone.read`, `dns.write`, `zone-settings.write`, `email-routing-rule.write` |
 | Paid | Free scopes plus `email-sending.write`, `queues.write` |
 
 Cloudflare adds `offline_access` for refresh tokens.
+
+**Zone Settings Write is required for receiving.** Email Routing Rules Write only
+manages rules; it does not authorize routing settings, DNS activation, or plus
+addressing. Cloudflare requires `zone-settings.write` for those operations.
+See [enable routing](https://developers.cloudflare.com/api/resources/email_routing/subresources/dns/methods/create/)
+and [update routing settings](https://developers.cloudflare.com/api/resources/email_routing/methods/edit/).
+
+### Upgrade an existing connection
+
+Rerun the installer. It checks the configured OAuth client and adds missing client
+scopes when the deployment credential has OAuth Client Write. If it reports a
+permission error, edit the existing client in Cloudflare and add **Zone Settings
+Write** (`zone-settings.write`); retain its client ID, callback, and other scopes.
+Then deploy the updated Worker and reconnect through **Domains → Add domain →
+Connect with Cloudflare**. Updating the client or Worker does not expand an
+existing owner's grant: the owner must approve the new scope in Cloudflare.
+API-token connections need **Zone Settings Edit** on the mail zones as well.
+
 Deploy with `CF_OAUTH_CLIENT_ID` set to the resulting client ID.
 The client ID is public configuration, not a credential.
 Existing Worker configuration is preserved on later deployments.

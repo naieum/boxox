@@ -117,6 +117,6 @@ describe("Cloudflare API OAuth", () => {
     const c = client();
     expect((await c.app.request(origin + "/api/orgs/default/domains/connection/oauth", { method: "POST" }, bindings)).status).toBe(403);
     expect((await c.call("/api/orgs/default/domains/connection/oauth", "POST", undefined, { ...bindings, CF_OAUTH_CLIENT_ID: undefined })).status).toBe(503);
-    expect(cloudflareOAuthScopes({ ...bindings, BOXOX_EDITION: "free" })).toEqual(["zone.read", "dns.write", "email-routing-rule.write", "offline_access"]);
+    expect(cloudflareOAuthScopes({ ...bindings, BOXOX_EDITION: "free" })).toEqual(["zone.read", "dns.write", "zone-settings.write", "email-routing-rule.write", "offline_access"]);
   });
 });

@@ -353,6 +353,33 @@ describe("later domain onboarding", () => {
       await next();
     }).route("/api/orgs/:orgId/domains", createDomainRoutes(fetcher));
   }
+  it("reports the missing routing-settings permission before changing a previous provider's DNS", async () => {
+    const cf = fakeCf({ ...zoneRoutes(),
+      [`GET /zones/${ZONE_ID}/email/routing`]: { status: 403, body: { success: false, errors: [{ code: 10000, message: "Authentication error" }] } },
+    });
+    const res = await call(adminApp(cf.fetcher), "POST", "/api/orgs/later-org/domains/onboard", {
+      domain: "boxox.dev", receive: true, confirmMxReplacement: true,
+    });
+    expect(res.status).toBe(403);
+    expect(res.json.error.code).toBe("token_forbidden");
+    expect(res.json.error.message).toContain("Zone Settings Write");
+    expect(res.json.error.message).toContain("Connect with Cloudflare again");
+    expect(cf.calls.every(c => c.method === "GET")).toBe(true);
+    expect(await db.query.domains.findFirst()).toBeUndefined();
+  });
+  it("names the settings permission when enabling an already-routed domain is forbidden", async () => {
+    const cf = fakeCf({ ...zoneRoutes(),
+      [`GET /zones/${ZONE_ID}/dns_records`]: () => [],
+      [`POST /zones/${ZONE_ID}/email/routing/enable`]: { status: 403, body: { success: false, errors: [{ code: 10000, message: "Authentication error" }] } },
+    });
+    const res = await call(adminApp(cf.fetcher), "POST", "/api/orgs/later-org/domains/onboard", {
+      domain: "boxox.dev", receive: true,
+    });
+    expect(res.status).toBe(403);
+    expect(res.json.error.message).toContain("Zone Settings Write");
+    expect(cf.calls.filter(c => c.method !== "GET").map(c => c.path)).toEqual([`/zones/${ZONE_ID}/email/routing/enable`]);
+    expect(await db.query.domains.findFirst()).toBeUndefined();
+  });
   it("adds a sending-only domain after setup without changing existing MX/SPF or organization", async () => {
     await db.insert(appSettings).values({ id: 1, setupCompletedAt: new Date() });
     const cf = fakeCf({ ...zoneRoutes(),

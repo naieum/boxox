@@ -165,7 +165,7 @@ A public health response does not verify Access configuration.
 Create a short-lived Cloudflare API token restricted to the installation account and the zones you plan to onboard.
 The [starter token template](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22zone%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22dns%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22queues%22%2C%22type%22%3A%22edit%22%7D%2C%7B%22key%22%3A%22workers_r2%22%2C%22type%22%3A%22edit%22%7D%5D&accountId=*&zoneId=all&name=Box%20Ox%20setup) provides a starting point.
 It preselects Zone Read, DNS Edit, Queues Edit, and Workers R2 Edit.
-**The template is incomplete:** add the Email Sending, Email Routing, and AI Gateway permissions required by your choices.
+**The template is incomplete:** add Zone Settings Edit, Email Routing Rules Edit, Email Sending Edit, and the AI Gateway permissions required by your choices.
 Replace its broad account and zone selections before creating the token.
 Cloudflare can change permission labels. Use the setup screen's checks to find missing scopes.
 
@@ -174,7 +174,8 @@ Cloudflare can change permission labels. Use the setup screen's checks to find m
 | Zone Read | List and inspect your zones |
 | DNS Edit | Apply the reviewed sending and receiving DNS records |
 | Email Sending Edit, Paid only | Enable sending and inspect account limits |
-| Email Routing Edit | Enable receiving, catch-all rules, and subaddressing |
+| Zone Settings Edit | Read and enable Email Routing and configure subaddressing |
+| Email Routing Rules Edit | Route incoming mail to the Box Ox Worker |
 | Queues Edit, Paid domain setup only | Subscribe email delivery events to the event queue |
 | Workers R2 Edit | Inspect lifecycle rules during setup; manage lifecycle rules through the Cloudflare API |
 | AI Gateway Edit, when AI is enabled | Apply gateway privacy and spending settings and check billing access |

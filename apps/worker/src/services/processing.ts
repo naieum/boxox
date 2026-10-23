@@ -164,7 +164,9 @@ export function cfError(err: unknown) {
       status: status as 403 | 404 | 502,
       body: bad(
         status === 403
-          ? "The Cloudflare API token lacks a permission this step needs. Check its scopes against the README."
+          ? err.requiredPermission
+            ? `Cloudflare denied Email Routing settings access. Connect with Cloudflare again and approve ${err.requiredPermission}. If that permission is absent, update the installation’s OAuth client first. API tokens need Zone Settings Edit for this zone.`
+            : "The Cloudflare connection lacks a permission this step needs. Reconnect with Cloudflare, or check your API token permissions against the setup guide."
           : err.message,
         status === 403 ? "token_forbidden" : "cloudflare_error",
       ),

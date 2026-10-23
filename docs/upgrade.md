@@ -71,6 +71,13 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.4.6 and earlier to 2.4.7
+
+- Receiving setup needs **Zone Settings Write** (`zone-settings.write`), in addition to Email Routing Rules Write. The installer adds the missing scope to the existing OAuth client when it has OAuth Client Write; otherwise it prints the manual update instructions.
+- Reconnect through **Domains → Add domain → Connect with Cloudflare** and approve the new scope. Existing grants do not gain permissions automatically.
+- API-token connections need **Zone Settings Edit** for the selected mail zones.
+- No database migration or new secrets. Mail already configured continues using its existing bindings.
+
 ### From 2.4.5 and earlier to 2.4.6
 
 - The installer generates `BOXOX_SIGNING_SECRET`. `AGENT_JWT_SECRET` now signs agent credentials only; every other key derives from the new secret. Nothing to do by hand.
