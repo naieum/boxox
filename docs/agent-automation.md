@@ -8,6 +8,14 @@ Agent endpoints require a short-lived agent bearer and the mailbox’s `read` gr
 
 Agree on the exact mailbox addresses and permissions before opening OAuth consent. Each requested mailbox permission is an OAuth scope in the form `boxox:<permission>:<email>`. For example, `boxox:read:hello@example.com` requests reading that mailbox. Add `boxox:send:hello@example.com` only when replies are needed. `send_new` also permits new recipients; request it only for that task. `webhook` and `classify` are separate permissions.
 
+CLI 0.3.0 prepares the request without credentials or a connection:
+
+```sh
+boxox mcp request --url https://mail.example.com --mailbox hello@example.com --mailbox ian@example.com --perm read
+```
+
+Its JSON output lists the requested mailboxes, OAuth scopes, endpoint, and client login arguments. Each `--perm` applies to every listed mailbox. For different rights per mailbox, use `--grant read:hello@example.com --grant send:hello@example.com --grant read:ian@example.com` instead of `--mailbox` and `--perm`. Preparing the request does not grant access.
+
 Configure the remote MCP server URL as `https://<your-installation>/mcp`. In Codex, once the server is configured as `boxox`, pass the agreed scopes at login:
 
 ```sh

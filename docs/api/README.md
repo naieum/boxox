@@ -2,7 +2,7 @@
 
 `openapi.json` is the OpenAPI 3.1 spec for `/dev/v1/*`. A running install also serves it at `GET /dev/v1/openapi.json`. This endpoint needs no key.
 
-The Free inbox profile supports incoming-mail access and webhooks. Outbound requests return `feature_unavailable`.
+The inbox install on Cloudflare Workers Free supports incoming-mail access and webhooks. Outbound requests return `feature_unavailable`.
 
 ## Direct SDK and CLI downloads
 
@@ -10,7 +10,7 @@ Box Ox self-publishes packages at https://boxox.dev/downloads/#developer-tools. 
 Download `boxox-mail-0.2.0.tgz`, verify it against the published SHA256SUMS.txt, then run `npm install ./boxox-mail-0.2.0.tgz` (or the equivalent in your package manager).
 
 The installed package name is `@boxox/mail`. The imports in this guide stay the same.
-The CLI package `boxox-cli-0.2.0.tgz` bundles the SDK and WebSocket client. Install the local file or run the standalone `boxox-cli-0.2.0.mjs` with Node.js 22+.
+The CLI package `boxox-cli-0.3.0.tgz` bundles the SDK and WebSocket client. Install the local file or run the standalone `boxox-cli-0.3.0.mjs` with Node.js 22+.
 
 Successful API sends appear in Sent and Developer logs. A received reply brings the conversation into Inbox. Mailbox copies have separate storage. Deleting one does not remove the API log.
 
@@ -78,7 +78,7 @@ Several deliveries can carry the same `webhook-id`, for example a replay. Use it
 
 ## Template design
 
-Template agents must complete the [email design review](https://boxox.dev/docs/email-design/) before publishing. The current [email skill](https://boxox.dev/downloads/boxox-email-skill-0.4.0.zip) includes the review and an HTML/plain-text invoice example.
+Template agents must complete the [email design review](https://boxox.dev/docs/email-design/) before publishing. The current [email skill](https://boxox.dev/downloads/boxox-email-skill-0.4.1.zip) includes the review and an HTML/plain-text invoice example.
 
 ## Maintain the API contract
 
