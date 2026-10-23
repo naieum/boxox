@@ -25,7 +25,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 This repository contains the current Box Ox V2 application source and documentation.
 The marketing website source and its build tools are maintained separately. Earlier private development history is not included.
 
-**Release 2.4.7:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install). This release fixes the Cloudflare permission needed to connect receiving domains, upgrades existing OAuth client registrations, and explains how to reconnect; read the [release notes](docs/release-2.4.7.md).
+**Release 2.4.8:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install). MCP clients can request exact mailbox permissions before consent, and approval shows progress and recoverable errors; read the [release notes](docs/release-2.4.8.md).
 The CLI and SDK are direct downloads. There are no npm registry packages to install.
 
 The 2.4.0 source installed in a fresh Workers Free account without domains, including owner sign-in and empty app pages.
@@ -33,7 +33,7 @@ The same empty installation later passed the agent removal procedure. Current in
 Mail delivery, populated-mail recovery, and Free throughput remain unverified in that fresh account.
 
 Cloudflare Access and mail-domain setup remain installation steps. A successful `/health` response alone does not prove mail delivery.
-Read the [release notes](docs/release-2.4.6.md) and verify the published checksums before installing.
+Read the [release notes](docs/release-2.4.8.md) and verify the published checksums before installing.
 
 ## Browse the source
 
@@ -51,6 +51,8 @@ pnpm install --frozen-lockfile
 Follow the setup guide before deploying or connecting real domains.
 
 ## Agent automation
+
+Request exact mailbox permissions before MCP login with scopes such as `boxox:read:hello@example.com`. The owner reviews those requested permissions before approving. See the [connection guide](docs/agent-automation.md#request-mcp-access-before-connecting).
 
 Use a durable change checkpoint to discover mail, claim each message before
 processing, and acknowledge completion. Bodies are opt-in and paginated. Reuse a

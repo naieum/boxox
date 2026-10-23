@@ -11,6 +11,7 @@ import type { AppContext } from "../middleware";
 import { SETUP_ORG_ID } from "../routes/setup";
 import { generateClientId } from "../services/agent-auth";
 import { oauthApi, publicOrigin } from "./provider";
+import { CONSENT_SCRIPT, consentPage, esc, page } from "./consent-page";
 
 /**
  * /oauth/authorize: the consent page. It stays behind Access, and only the
@@ -81,6 +82,32 @@ function clientName(client: ClientInfo): string {
   return (client.clientName?.trim() || client.clientId).slice(0, 100);
 }
 
+type RequestedGrant = { addressId: string; email: string; permissions: (typeof GRANT_PERMISSIONS)[number][] };
+
+/** Mailbox requests use ordinary OAuth scopes, e.g. boxox:read:hello@example.com. */
+function requestedGrants(scope: string[], available: { id: string; email: string }[]): RequestedGrant[] | null {
+  const requested = new Map<string, RequestedGrant>();
+  for (const token of scope) {
+    if (token === "offline_access") continue;
+    const match = /^boxox:([^:]+):(.+)$/.exec(token);
+    const permission = GRANT_PERMISSIONS.find((p) => p === match?.[1]);
+    if (!match || !permission) {
+      throw new ConsentError(400, "invalid_scope", "Request each mailbox with boxox:<permission>:<email>.");
+    }
+    const address = available.find((a) => a.email.toLowerCase() === match[2]!.toLowerCase());
+    if (!address) throw new ConsentError(400, "invalid_scope", "A requested mailbox is not active in this installation.");
+    const grant = requested.get(address.id) ?? { addressId: address.id, email: address.email, permissions: [] };
+    if (!grant.permissions.includes(permission)) grant.permissions.push(permission);
+    requested.set(address.id, grant);
+  }
+  if (requested.size > 200) throw new ConsentError(400, "invalid_scope", "Request at most 200 mailboxes.");
+  return requested.size ? [...requested.values()] : null;
+}
+
+function grantKey(grants: { addressId: string; permissions: string[] }[]): string {
+  return JSON.stringify([...new Set(grants.flatMap((g) => g.permissions.map((p) => `${g.addressId}:${p}`)))].sort());
+}
+
 async function consentOptions(c: Context<AppContext>) {
   const db = c.get("db");
   const [addressRows, agentRows] = await Promise.all([
@@ -122,12 +149,15 @@ export const consentRoutes = new Hono<AppContext>()
       if (!isOwner(c)) throw ownerOnly();
       const { authRequest, client } = await parseConsent(c);
       const options = await consentOptions(c);
+      const requested = requestedGrants(authRequest.scope, options.addresses);
       const consent = {
         client: { clientId: client.clientId, name: clientName(client), clientUri: client.clientUri ?? null },
         redirectUri: authRequest.redirectUri,
         scope: authRequest.scope,
         permissions: GRANT_PERMISSIONS,
         ...options,
+        ...(requested ? { addresses: requested.map((g) => ({ id: g.addressId, email: g.email })), agents: [] } : {}),
+        requested,
       };
       if (wantsJson(c)) return c.json(consent);
       return c.html(consentPage(consent), 200, { "cache-control": "no-store" });
@@ -163,7 +193,31 @@ export const consentRoutes = new Hono<AppContext>()
         return c.json({ redirectTo: to.toString() });
       }
 
+      const options = await consentOptions(c);
+      const requested = requestedGrants(authRequest.scope, options.addresses);
+      if (requested && (parsed.data.agentId || (parsed.data.grants.length && grantKey(parsed.data.grants) !== grantKey(requested)))) {
+        throw new ConsentError(400, "invalid_scope", "Approve only the mailboxes and permissions in this request.");
+      }
       let agentId = parsed.data.agentId;
+      let createdAgent = false;
+      let reusedApproval = false;
+      // A retry of the same approval must not rebind the client and invalidate its issued tokens.
+      if (!agentId) {
+        const prior = (await db.select({ agentId: mcpClients.agentId })
+          .from(mcpClients).where(eq(mcpClients.clientId, client.clientId)).limit(1))[0];
+        if (prior?.agentId) {
+          const active = (await db.select({ id: agents.id }).from(agents).where(and(
+            eq(agents.id, prior.agentId), eq(agents.organizationId, SETUP_ORG_ID), eq(agents.status, "active"),
+          )).limit(1))[0];
+          const priorGrants = active ? await db.select({ addressId: addressGrants.addressId, permissions: addressGrants.permissions })
+            .from(addressGrants).where(and(eq(addressGrants.organizationId, SETUP_ORG_ID),
+              eq(addressGrants.principalType, "agent"), eq(addressGrants.principalId, active.id))) : [];
+          if (active && grantKey(priorGrants) === grantKey(requested ?? parsed.data.grants)) {
+            agentId = active.id;
+            reusedApproval = true;
+          }
+        }
+      }
       if (agentId) {
         const existing = await db
           .select({ id: agents.id })
@@ -172,16 +226,17 @@ export const consentRoutes = new Hono<AppContext>()
           .limit(1);
         if (!existing[0]) throw new ConsentError(404, "not_found", "No such agent");
       } else {
-        const wanted = parsed.data.grants;
+        const wanted = requested ?? parsed.data.grants;
         const ids = [...new Set(wanted.map((g) => g.addressId))];
         const found = ids.length
           ? await db
               .select({ id: addresses.id })
               .from(addresses)
-              .where(and(eq(addresses.organizationId, SETUP_ORG_ID), inArray(addresses.id, ids)))
+              .where(and(eq(addresses.organizationId, SETUP_ORG_ID), eq(addresses.status, "active"), inArray(addresses.id, ids)))
           : [];
         if (found.length !== ids.length) throw new ConsentError(400, "bad_request", "Unknown address in grants");
         agentId = crypto.randomUUID();
+        createdAgent = true;
         const newAgentId = agentId;
         await batch(db, [
           db.insert(agents).values({
@@ -229,6 +284,7 @@ export const consentRoutes = new Hono<AppContext>()
         scope: authRequest.scope,
         metadata: { clientName: name, approvedBy: user.email },
         props,
+        revokeExistingGrants: !reusedApproval,
       });
       await writeAudit(db, {
         organizationId: SETUP_ORG_ID,
@@ -237,88 +293,10 @@ export const consentRoutes = new Hono<AppContext>()
         action: "mcp_client.approved",
         targetType: "mcp_client",
         targetId: client.clientId,
-        metadata: { agentId, newAgent: !parsed.data.agentId },
+        metadata: { agentId, newAgent: createdAgent },
       });
       return c.json({ redirectTo });
     } catch (err) {
       return fail(c, err);
     }
   });
-
-// ---------- page ----------
-
-function esc(s: string): string {
-  return s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
-}
-
-function page(title: string, body: string): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:40rem;margin:3rem auto;padding:0 1rem;color:#1d1d1f}fieldset{border:1px solid #ddd;border-radius:8px;margin:1rem 0}label{display:block}code{word-break:break-all}button{font:inherit;padding:.5rem 1rem;margin-right:.5rem}</style></head><body><h1>${esc(title)}</h1>${body}</body></html>`;
-}
-
-interface ConsentView {
-  client: { clientId: string; name: string; clientUri: string | null };
-  redirectUri: string;
-  permissions: readonly string[];
-  addresses: { id: string; email: string }[];
-  agents: { id: string; name: string }[];
-}
-
-function consentPage(v: ConsentView): string {
-  const agentChoices = v.agents
-    .map((a) => `<label><input type="radio" name="agent" value="${esc(a.id)}"> Use agent “${esc(a.name)}”</label>`)
-    .join("");
-  const grants = v.addresses
-    .map(
-      (a) =>
-        `<p><strong>${esc(a.email)}</strong><br>${v.permissions
-          .map(
-            (p) =>
-              `<label style="display:inline;margin-right:1rem"><input type="checkbox" name="grant" value="${esc(a.id)}:${esc(p)}"> ${esc(p)}</label>`,
-          )
-          .join("")}</p>`,
-    )
-    .join("");
-  return page(
-    `Connect “${v.client.name}” to your mail?`,
-    `<p>This app is asking for MCP access. It will act as an agent with only the mailboxes and permissions you pick.</p>
-<p>After you decide you'll be sent to <code>${esc(v.redirectUri)}</code>.</p>
-<form id="consent">
-<fieldset><legend>Agent</legend>
-<label><input type="radio" name="agent" value="" checked> A new agent named “${esc(v.client.name)}”</label>${agentChoices}
-</fieldset>
-<fieldset><legend>Mailboxes for a new agent</legend>${grants || "<p>No active addresses yet.</p>"}
-<p><small><code>send</code> is replies only; <code>send_new</code> allows new recipients.</small></p></fieldset>
-<button type="submit" name="decision" value="approve">Approve</button>
-<button type="submit" name="decision" value="deny">Deny</button>
-<p id="consent-error" role="alert"></p>
-</form>
-<script src="/oauth/consent.js"></script>`,
-  );
-}
-
-/** Served from /oauth/consent.js: the CSP allows only same-origin scripts. */
-const CONSENT_SCRIPT = `(() => {
-  const form = document.getElementById("consent");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const decision = e.submitter && e.submitter.value === "deny" ? "deny" : "approve";
-    const data = new FormData(form);
-    const agentId = data.get("agent") || undefined;
-    const byAddress = {};
-    for (const v of data.getAll("grant")) {
-      const i = String(v).lastIndexOf(":");
-      const id = String(v).slice(0, i);
-      (byAddress[id] = byAddress[id] || []).push(String(v).slice(i + 1));
-    }
-    const grants = Object.entries(byAddress).map(([addressId, permissions]) => ({ addressId, permissions }));
-    const res = await fetch(location.href, {
-      method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json", "x-boxox-csrf": "1" },
-      body: JSON.stringify({ decision, agentId, grants }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (res.ok && body.redirectTo) return location.assign(body.redirectTo);
-    document.getElementById("consent-error").textContent = (body.error && body.error.message) || "Something went wrong";
-  });
-})();
-`;
