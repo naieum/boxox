@@ -90,7 +90,7 @@ async function register(
 
 function authorizePath(
   clientId: string,
-  opts: { redirectUri?: string; challenge?: string; method?: string | null } = {},
+  opts: { redirectUri?: string; challenge?: string; method?: string | null; scope?: string[] } = {},
 ): string {
   const q = new URLSearchParams({
     response_type: "code",
@@ -100,6 +100,7 @@ function authorizePath(
   });
   if (opts.challenge) q.set("code_challenge", opts.challenge);
   if (opts.method !== null) q.set("code_challenge_method", opts.method ?? "S256");
+  if (opts.scope) q.set("scope", opts.scope.join(" "));
   return `/oauth/authorize?${q}`;
 }
 
@@ -203,6 +204,95 @@ async function callTool(token: string, name: string, args: Record<string, unknow
 // ---------- tests ----------
 
 describe("OAuth for MCP", () => {
+  it("reviews requested mailbox scopes and grants exactly that access through MCP", async () => {
+    const domain = `${crypto.randomUUID()}.test`;
+    const mailbox = await seedMailbox(db, { orgId: ORG, domain, localPart: "hello" });
+    const otherDomain = `${crypto.randomUUID()}.test`;
+    await seedMailbox(db, { orgId: ORG, domain: otherDomain });
+    const { clientId } = await register();
+    const { verifier, challenge } = await pkce();
+    const scope = [`boxox:read:hello@${domain}`, `boxox:read:hello@${domain}`, "offline_access"];
+    const path = authorizePath(clientId, { challenge, scope });
+    const view = await consentGet(path);
+    expect(view.status).toBe(200);
+    expect(await view.json()).toMatchObject({
+      requested: [{ addressId: mailbox.addressId, email: `hello@${domain}`, permissions: ["read"] }],
+      addresses: [{ id: mailbox.addressId, email: `hello@${domain}` }], agents: [],
+    });
+    const html = await (await send(path, { headers: { "x-test-role": "owner" } })).text();
+    expect(html).toContain("Approve requested access");
+    expect(html).toContain(`hello@${domain}`);
+    expect(html).not.toContain(otherDomain);
+    expect(html).not.toContain('type="checkbox"');
+    expect(html).not.toContain('type="radio"');
+    expect(html).not.toContain("Send to new recipients");
+
+    // The server derives grants from the request, rather than trusting hidden form fields.
+    const approved = await consentPost(path, { decision: "approve" });
+    expect(approved.status).toBe(200);
+    const code = new URL(((await approved.json()) as { redirectTo: string }).redirectTo).searchParams.get("code")!;
+    const token = await tokenRequest({ grant_type: "authorization_code", code, redirect_uri: REDIRECT, client_id: clientId, code_verifier: verifier });
+    expect(token.status).toBe(200);
+    const { access_token } = await token.json() as { access_token: string };
+    const mine = await callTool(access_token, "list_addresses");
+    expect(JSON.parse(mine.content[0]!.text).addresses).toEqual([{ addressId: mailbox.addressId, permissions: ["read"] }]);
+    const deniedSend = await callTool(access_token, "send_email", { fromAddressId: mailbox.addressId, to: ["person@example.test"], subject: "No", text: "No" });
+    expect(deniedSend.isError).toBe(true);
+  });
+
+  it("rejects unknown mailbox requests and forged grants before creating an agent", async () => {
+    const domain = `${crypto.randomUUID()}.test`;
+    const mailbox = await seedMailbox(db, { orgId: ORG, domain, localPart: "hello" });
+    const other = await seedMailbox(db, { orgId: ORG });
+    const broad = await connect(["read", "send_new"]);
+    const { clientId } = await register();
+    const { challenge } = await pkce();
+    const count = (await db.select().from(agents)).length;
+    for (const scope of [["boxox:read:absent@example.test"], [`boxox:owner:hello@${domain}`], ["boxox:read"]]) {
+      const path = authorizePath(clientId, { challenge, scope });
+      expect((await consentGet(path)).status).toBe(400);
+      expect((await consentPost(path, { decision: "approve" })).status).toBe(400);
+    }
+    const path = authorizePath(clientId, { challenge, scope: [`boxox:read:hello@${domain}`] });
+    for (const body of [
+      { grants: [{ addressId: mailbox.addressId, permissions: ["read", "send_new"] }] },
+      { grants: [{ addressId: other.addressId, permissions: ["read"] }] },
+      { agentId: broad.agentId },
+    ]) {
+      expect((await consentPost(path, { decision: "approve", ...body })).status).toBe(400);
+    }
+    expect((await db.select().from(agents)).length).toBe(count);
+    expect(await db.select().from(mcpClients).where(eq(mcpClients.clientId, clientId))).toHaveLength(0);
+    const denied = await consentPost(path, { decision: "deny" });
+    expect(denied.status).toBe(200);
+    expect(new URL(((await denied.json()) as { redirectTo: string }).redirectTo).searchParams.get("error")).toBe("access_denied");
+  });
+
+  it("keeps clients without mailbox scopes on an explicit manual fallback", async () => {
+    const { clientId } = await register();
+    const { challenge } = await pkce();
+    const path = authorizePath(clientId, { challenge });
+    const html = await (await send(path, { headers: { "x-test-role": "owner" } })).text();
+    expect(html).toContain("This app did not specify any mailboxes");
+    expect(html).toContain("<details><summary>Choose access manually</summary>");
+    expect(html).not.toContain("<details open");
+    expect(html).not.toMatch(/type="checkbox"[^>]*checked/);
+    expect((await consentPost(path, { decision: "deny" })).status).toBe(200);
+  });
+
+  it("reuses the approved agent on retry so issued MCP tokens keep working", async () => {
+    const c = await connect(["read"]);
+    const count = (await db.select().from(agents)).length;
+    const { challenge } = await pkce();
+    const path = authorizePath(c.clientId, { challenge });
+    const body = { decision: "approve", grants: [{ addressId: c.mailbox.addressId, permissions: ["read"] }] };
+    expect((await consentPost(path, body)).status).toBe(200);
+    const row = (await db.select().from(mcpClients).where(eq(mcpClients.clientId, c.clientId)))[0]!;
+    expect(row.agentId).toBe(c.agentId);
+    expect((await db.select().from(agents)).length).toBe(count);
+    expect((await rpc(c.accessToken, "tools/list")).status).toBe(200);
+  });
+
   it("requires PKCE", async () => {
     // A confidential client, which the provider alone would let skip PKCE.
     const { clientId, clientSecret } = await register({ confidential: true });

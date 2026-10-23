@@ -71,6 +71,12 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.4.7 to 2.4.8
+
+- MCP clients can request exact mailbox permissions before authorization with scopes such as `boxox:read:hello@example.com`. Consent lists that request for approval. Clients without mailbox scopes retain a collapsed manual setup option.
+- Approval shows progress and recoverable errors. Repeating an approval with matching grants retains its agent connection.
+- Existing connections keep their approved grants. No database migration, new secret, or reconnection is required for them.
+
 ### From 2.4.6 and earlier to 2.4.7
 
 - Receiving setup needs **Zone Settings Write** (`zone-settings.write`), in addition to Email Routing Rules Write. The installer adds the missing scope to the existing OAuth client when it has OAuth Client Write; otherwise it prints the manual update instructions.

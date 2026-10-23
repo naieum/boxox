@@ -1,0 +1,106 @@
+{
+  "version": "2.4.8",
+  "commit": "a878c02a5d33bb5280ded38489db9aacedcb8bc0",
+  "sha256": "a210943d59a2eb8562a11d06876c9c9ef89ea06c5b10462d808d3956db6230d4",
+  "bytes": 20914168,
+  "license": "FSL-1.1-MIT",
+  "sdkLicense": "MIT",
+  "cliLicense": "MIT",
+  "signedRelease": false,
+  "installationVerification": "MCP mailbox-scope consent and approval-feedback release. Existing Paid installation upgraded without database migrations or new secrets. The deployed /health reports the release source commit. A live consent request displayed only its requested mailbox and Read messages permission. OAuth-to-MCP tests cover exact grants, forged requests, unknown mailboxes, denied consent, legacy clients, and matching-approval retries. Browser preview checks cover requested-access review, progress, success navigation, server errors, empty selection, and network errors. SDK 0.2.0, CLI 0.2.0, and email skill 0.4.1 retain their published bytes. This is not a fresh-account installation or a new mail-delivery certification.",
+  "cleanAccountInstallVerified": false,
+  "oneClickInstallVerified": false,
+  "artifacts": [
+    {
+      "name": "boxox-v2.zip",
+      "bytes": 20914168,
+      "sha256": "a210943d59a2eb8562a11d06876c9c9ef89ea06c5b10462d808d3956db6230d4"
+    },
+    {
+      "name": "boxox-email-skill-0.4.1.zip",
+      "bytes": 8007,
+      "sha256": "fdc53c16f80743550544e1b2ff4d3345ceaeabdf887d0bd4d56d855e99c2a99b"
+    },
+    {
+      "name": "boxox-mail-0.2.0.tgz",
+      "bytes": 16122,
+      "sha256": "e5fd7401ad745e562f69e8ee94e5033cfde6ae6ae535a40eb24c3fe33663bd1c"
+    },
+    {
+      "name": "boxox-cli-0.2.0.tgz",
+      "bytes": 41210,
+      "sha256": "aaa0d5ca9890d9db50ce9fc2672ea40d05cf45038d6c39bf2e8b8ee4f65270fb"
+    },
+    {
+      "name": "boxox-cli-0.2.0.mjs",
+      "bytes": 162700,
+      "sha256": "fb26e91921e153ced1e4e3d5cd15ba07fa3a63816f2dd43cee9d7967ea98fc45"
+    }
+  ],
+  "freeAccountInstallVerified": false,
+  "predecessorFreshAccountAppVerification": {
+    "version": "2.4.0",
+    "profile": "free",
+    "domains": 0,
+    "ownerSignInVerified": true,
+    "mailDeliveryVerified": false
+  },
+  "predecessorFreshAccountRemovalVerification": {
+    "version": "2.4.0",
+    "profile": "free",
+    "domains": 0,
+    "messages": 0,
+    "attachments": 0,
+    "r2Objects": 0,
+    "appResourcesRemoved": true,
+    "accessAppsAndUnusedPoliciesRemoved": true,
+    "oldAppEndpointsChecked": 7,
+    "oldAppStatus": 404,
+    "accessCleanup": "authorized-dashboard",
+    "accountSubscriptionsRetained": true,
+    "wranglerProfilesRetained": true,
+    "mailMigrationVerified": false,
+    "populatedMailRecoveryVerified": false
+  },
+  "publicationPrivacy": {
+    "sourceSanitized": true,
+    "scanner": "Gitleaks 8.30.1 with exact reviewed test-fixture hashes, plus Cloudflare resource-ID and bounce-address checks",
+    "generatedArchiveScanRequired": true,
+    "priorSourceVersionsWithdrawn": [
+      "2.0.0",
+      "2.0.1",
+      "2.1.0",
+      "2.1.1",
+      "2.1.2",
+      "2.2.0",
+      "2.3.0",
+      "2.4.0",
+      "2.4.1",
+      "2.4.2",
+      "2.4.3",
+      "2.4.4"
+    ],
+    "requiredAttributionPreserved": true,
+    "priorPackagesWithdrawn": [
+      "boxox-email-skill-0.1.0.zip",
+      "boxox-email-skill-0.2.0.zip",
+      "boxox-email-skill-0.3.0.zip",
+      "boxox-email-skill-0.4.0.zip",
+      "boxox-brand-assets-1.0.0.zip",
+      "boxox-brand-assets-1.1.0.zip"
+    ]
+  },
+  "verification": {
+    "workerTests": 514,
+    "workerTestsPassed": true,
+    "freeProfileTests": 8,
+    "freeProfileTestsPassed": true,
+    "deploymentAndSiteScriptTests": 70,
+    "releasePrivacyTests": 6,
+    "typecheckPassed": true,
+    "webBuildPassed": true,
+    "existingPaidUpgradeHealthVerified": true,
+    "freshAccountInstallVerified": false,
+    "liveScopedConsentVerified": true
+  }
+}

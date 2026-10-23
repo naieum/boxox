@@ -4,6 +4,22 @@ Use the changes feed to discover mail. Use work claims to coordinate processing.
 
 Agent endpoints require a short-lived agent bearer and the mailbox’s `read` grant. Developer `bxk_` and `bxm_` keys do not work here. The owner pairs agents and controls grants in the app.
 
+## Request MCP access before connecting
+
+Agree on the exact mailbox addresses and permissions before opening OAuth consent. Each requested mailbox permission is an OAuth scope in the form `boxox:<permission>:<email>`. For example, `boxox:read:hello@example.com` requests reading that mailbox. Add `boxox:send:hello@example.com` only when replies are needed. `send_new` also permits new recipients; request it only for that task. `webhook` and `classify` are separate permissions.
+
+Configure the remote MCP server URL as `https://<your-installation>/mcp`. In Codex, once the server is configured as `boxox`, pass the agreed scopes at login:
+
+```sh
+codex mcp login boxox --scopes 'boxox:read:hello@example.com,boxox:read:ian@example.com'
+```
+
+The client sends these as space-separated values in the authorization request's `scope` parameter. The consent screen lists only the requested mailboxes and permissions. The owner approves or denies that request; they do not have to construct it from every available permission. Box Ox checks the request again when saving approval and rejects added mailboxes, added permissions, and broader existing agents. Unknown or inactive mailboxes fail before approval.
+
+Clients that send no mailbox scopes get a collapsed manual setup option. Nothing is selected for them. Prefer a specific request so the owner can review the access the agent needs. Existing agent tokens and their grants continue to work.
+
+After approval, call `list_addresses` to verify the actual granted mailbox IDs and permissions before reading or sending. If the required mailbox is missing, reconnect with a corrected request. Do not switch to another email account without explaining the missing mailbox access.
+
 ## Process pending mail
 
 Build the SDK and CLI from the same source release as your Worker. Earlier SDK packages expose only the developer API.
@@ -93,7 +109,7 @@ Replay applies current grants and visibility. It does not preserve an old view o
 
 ## Reply retries
 
-The Free inbox profile does not send mail. These reply operations require the Paid profile and sending grants.
+The inbox install on Cloudflare Workers Free does not send mail. These reply operations require the full install on Workers Paid and sending grants.
 
 Use a stable `idempotencyKey` with `agent.send()` or MCP `send_email`. REST also accepts the `Idempotency-Key` header. Header and body values must agree.
 
