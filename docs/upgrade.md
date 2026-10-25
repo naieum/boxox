@@ -71,6 +71,13 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.4.8 to 2.4.9
+
+- Use Node.js 22.23.4, 24.22.1, 26.12.1, or a newer release on those lines. `pnpm install` now stops with `ERR_PNPM_UNSUPPORTED_ENGINE` on an unpatched Node.js.
+- Deploy to Cloudflare installations: the repository's `.nvmrc` sets the Workers Builds Node.js version. Remove any `NODE_VERSION` build variable that pins an older release.
+- The Worker moves to zod 4. Request limits and defaults are unchanged; some validation error messages are worded differently.
+- No database migration, new secret, or reconnection is required.
+
 ### From 2.4.7 to 2.4.8
 
 - MCP clients can request exact mailbox permissions before authorization with scopes such as `boxox:read:hello@example.com`. Consent lists that request for approval. Clients without mailbox scopes retain a collapsed manual setup option.
