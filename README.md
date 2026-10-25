@@ -25,8 +25,8 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 This repository contains the current Box Ox V2 application source and documentation.
 The marketing website source and its build tools are maintained separately. Earlier private development history is not included.
 
-**Release 2.4.8:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install). MCP clients can request exact mailbox permissions before consent, and approval shows progress and recoverable errors; read the [release notes](docs/release-2.4.8.md).
-**Tools update:** CLI 0.3.0 prepares exact MCP access requests, and email skill 0.5.0 covers mailbox connections, reading, and replies. Both target the existing 2.4.8 consent flow. Read the [tools release notes](docs/tools-0.3.0.md).
+**Release 2.4.9:** self-published source, CLI, SDK, and agent skill are available at [boxox.dev](https://boxox.dev/#install). This security release refuses Node.js versions without the October 21, 2026 fixes and clears high-severity zod, undici, and body-parser advisories; read the [release notes](docs/release-2.4.9.md).
+**Tools update:** CLI 0.3.0 prepares exact MCP access requests, and email skill 0.5.0 covers mailbox connections, reading, and replies. Both target the consent flow in 2.4.8 and newer. Read the [tools release notes](docs/tools-0.3.0.md).
 
 The CLI and SDK are direct downloads. There are no npm registry packages to install.
 
@@ -35,7 +35,7 @@ The same empty installation later passed the agent removal procedure. Current in
 Mail delivery, populated-mail recovery, and Free throughput remain unverified in that fresh account.
 
 Cloudflare Access and mail-domain setup remain installation steps. A successful `/health` response alone does not prove mail delivery.
-Read the [release notes](docs/release-2.4.8.md) and verify the published checksums before installing.
+Read the [release notes](docs/release-2.4.9.md) and verify the published checksums before installing.
 
 ## Browse the source
 
