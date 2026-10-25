@@ -303,7 +303,7 @@ export async function deleteTemplate(db: Db, key: AuthenticatedKey, name: string
 }
 
 export const previewSchema = z
-  .object({ version: z.number().int().min(1).optional(), variables: z.record(z.unknown()).optional() })
+  .object({ version: z.number().int().min(1).optional(), variables: z.record(z.string(), z.unknown()).optional() })
   .strict();
 
 export async function previewTemplate(db: Db, key: AuthenticatedKey, name: string, raw: unknown) {
@@ -334,7 +334,7 @@ export async function applyTemplate(
   const { template, variables, ...rest } = raw as Record<string, unknown>;
   const ref = sendTemplateSchema.safeParse(template);
   if (!ref.success) throw zodError(ref.error, "template");
-  const values = z.record(z.unknown()).optional().safeParse(variables);
+  const values = z.record(z.string(), z.unknown()).optional().safeParse(variables);
   if (!values.success) throw zodError(values.error, "variables");
   if (rest.html !== undefined || rest.text !== undefined) {
     throw new MessageError(400, "bad_request", "Send html/text or a template, not both", "template");

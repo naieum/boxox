@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { API_KEY_KINDS, ATTACHMENT_RISKS, DOMAIN_KEY_PERMISSIONS, MESSAGE_EVENT_TYPES, suppressions } from "@boxox/db";
 import { apiCreateSchema, devKeyRoutes, rotateSchema as keyRotateSchema } from "./keys-routes";
 import { batchSchema, LIST_STATUSES, rescheduleSchema, sendSchema } from "./messages";
@@ -37,7 +36,7 @@ const page = <T extends z.ZodTypeAny>(item: T) => z.object({ data: z.array(item)
 const sendRequest = sendSchema.extend({
   subject: sendSchema.shape.subject.optional(),
   template: sendTemplateSchema.optional(),
-  variables: z.record(z.unknown()).optional(),
+  variables: z.record(z.string(), z.unknown()).optional(),
 });
 
 const schemas = {
@@ -65,7 +64,7 @@ const schemas = {
     bcc: z.array(z.string()),
     replyTo: z.array(z.string()),
     subject: z.string(),
-    tags: z.record(z.string()),
+    tags: z.record(z.string(), z.string()),
     status: z.enum(LIST_STATUSES),
     scheduledAt: isoOrNull,
     sentMessageId: z.string().nullable(),
@@ -209,8 +208,8 @@ const listOf = (name: SchemaName) => ({
   additionalProperties: false,
 });
 
-function jsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
-  const { $schema: _s, ...out } = zodToJsonSchema(schema, { target: "jsonSchema2019-09", $refStrategy: "none" }) as Record<string, unknown>;
+function jsonSchema(schema: z.core.$ZodType): Record<string, unknown> {
+  const { $schema: _s, ...out } = z.toJSONSchema(schema, { target: "draft-2020-12", io: "input", unrepresentable: "any" }) as Record<string, unknown>;
   return out;
 }
 
@@ -308,8 +307,8 @@ type Param = { name: string; in: "path" | "query" | "header"; required: boolean;
 
 const pathParam = (name: string): Param => ({ name, in: "path", required: true, schema: { type: "string" } });
 
-function queryParams(schema: z.AnyZodObject): Param[] {
-  return Object.entries(schema.shape as Record<string, z.ZodTypeAny>).map(([name, field]) => ({
+function queryParams(schema: z.ZodObject): Param[] {
+  return Object.entries(schema.shape as Record<string, z.ZodType>).map(([name, field]) => ({
     name,
     in: "query",
     required: !field.isOptional(),
