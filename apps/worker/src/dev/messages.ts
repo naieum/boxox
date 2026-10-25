@@ -63,7 +63,7 @@ export const sendSchema = z
     subject: z.string().max(998),
     html: z.string().optional(),
     text: z.string().optional(),
-    headers: z.record(z.string().max(2000)).optional(),
+    headers: z.record(z.string(), z.string().max(2000)).optional(),
     attachments: z
       .array(
         z.object({
@@ -75,7 +75,7 @@ export const sendSchema = z
       )
       .max(100)
       .optional(),
-    tags: z.record(z.string().max(256)).optional(),
+    tags: z.record(z.string(), z.string().max(256)).optional(),
     sendAt: z.string().datetime({ offset: true }).optional(),
     track: z.object({ opens: z.boolean().optional(), clicks: z.boolean().optional() }).optional(),
   })

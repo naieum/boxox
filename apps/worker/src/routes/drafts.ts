@@ -55,7 +55,7 @@ const sendSchema = z
     linkExpiresInDays: z.number().int().min(1).max(MAX_LINK_DAYS).default(DEFAULT_LINK_DAYS),
     includeOriginalAttachments: z.boolean().default(true),
   })
-  .default({});
+  .prefault({});
 
 const notFound = { error: { code: "not_found", message: "No such draft" } } as const;
 

@@ -2218,14 +2218,12 @@
             "required": [
               "code",
               "message"
-            ],
-            "additionalProperties": false
+            ]
           }
         },
         "required": [
           "error"
-        ],
-        "additionalProperties": false
+        ]
       },
       "SendMessageRequest": {
         "type": "object",
@@ -2243,13 +2241,13 @@
                 "maxLength": 320
               },
               {
+                "maxItems": 50,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "minLength": 3,
                   "maxLength": 320
-                },
-                "maxItems": 50
+                }
               }
             ]
           },
@@ -2261,13 +2259,13 @@
                 "maxLength": 320
               },
               {
+                "maxItems": 50,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "minLength": 3,
                   "maxLength": 320
-                },
-                "maxItems": 50
+                }
               }
             ]
           },
@@ -2279,13 +2277,13 @@
                 "maxLength": 320
               },
               {
+                "maxItems": 50,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "minLength": 3,
                   "maxLength": 320
-                },
-                "maxItems": 50
+                }
               }
             ]
           },
@@ -2306,12 +2304,16 @@
           },
           "headers": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {
               "type": "string",
               "maxLength": 2000
             }
           },
           "attachments": {
+            "maxItems": 100,
             "type": "array",
             "items": {
               "type": "object",
@@ -2338,13 +2340,14 @@
               "required": [
                 "filename",
                 "content"
-              ],
-              "additionalProperties": false
-            },
-            "maxItems": 100
+              ]
+            }
           },
           "tags": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {
               "type": "string",
               "maxLength": 256
@@ -2352,7 +2355,8 @@
           },
           "sendAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
           },
           "track": {
             "type": "object",
@@ -2363,8 +2367,7 @@
               "clicks": {
                 "type": "boolean"
               }
-            },
-            "additionalProperties": false
+            }
           },
           "template": {
             "anyOf": [
@@ -2383,7 +2386,8 @@
                   },
                   "version": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -2395,6 +2399,9 @@
           },
           "variables": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {}
           }
         },
@@ -2408,14 +2415,16 @@
         "type": "object",
         "properties": {
           "mode": {
+            "default": "all_or_nothing",
             "type": "string",
             "enum": [
               "all_or_nothing",
               "partial"
-            ],
-            "default": "all_or_nothing"
+            ]
           },
           "messages": {
+            "minItems": 1,
+            "maxItems": 100,
             "type": "array",
             "items": {
               "type": "object",
@@ -2433,13 +2442,13 @@
                       "maxLength": 320
                     },
                     {
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "type": "string",
                         "minLength": 3,
                         "maxLength": 320
-                      },
-                      "maxItems": 50
+                      }
                     }
                   ]
                 },
@@ -2451,13 +2460,13 @@
                       "maxLength": 320
                     },
                     {
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "type": "string",
                         "minLength": 3,
                         "maxLength": 320
-                      },
-                      "maxItems": 50
+                      }
                     }
                   ]
                 },
@@ -2469,13 +2478,13 @@
                       "maxLength": 320
                     },
                     {
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "type": "string",
                         "minLength": 3,
                         "maxLength": 320
-                      },
-                      "maxItems": 50
+                      }
                     }
                   ]
                 },
@@ -2496,12 +2505,16 @@
                 },
                 "headers": {
                   "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
                   "additionalProperties": {
                     "type": "string",
                     "maxLength": 2000
                   }
                 },
                 "attachments": {
+                  "maxItems": 100,
                   "type": "array",
                   "items": {
                     "type": "object",
@@ -2528,13 +2541,14 @@
                     "required": [
                       "filename",
                       "content"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "maxItems": 100
+                    ]
+                  }
                 },
                 "tags": {
                   "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
                   "additionalProperties": {
                     "type": "string",
                     "maxLength": 256
@@ -2542,7 +2556,8 @@
                 },
                 "sendAt": {
                   "type": "string",
-                  "format": "date-time"
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
                 },
                 "track": {
                   "type": "object",
@@ -2553,8 +2568,7 @@
                     "clicks": {
                       "type": "boolean"
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 },
                 "template": {
                   "anyOf": [
@@ -2573,7 +2587,8 @@
                         },
                         "version": {
                           "type": "integer",
-                          "minimum": 1
+                          "minimum": 1,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -2585,6 +2600,9 @@
                 },
                 "variables": {
                   "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
                   "additionalProperties": {}
                 }
               },
@@ -2593,22 +2611,20 @@
                 "to"
               ],
               "additionalProperties": false
-            },
-            "minItems": 1,
-            "maxItems": 100
+            }
           }
         },
         "required": [
           "messages"
-        ],
-        "additionalProperties": false
+        ]
       },
       "RescheduleRequest": {
         "type": "object",
         "properties": {
           "sendAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
           }
         },
         "required": [
@@ -2634,7 +2650,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -2646,8 +2663,7 @@
           "id",
           "status",
           "scheduledAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "BatchResult": {
         "type": "object",
@@ -2658,7 +2674,9 @@
               "type": "object",
               "properties": {
                 "index": {
-                  "type": "integer"
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
                 },
                 "id": {
                   "type": "string"
@@ -2675,7 +2693,8 @@
                   "anyOf": [
                     {
                       "type": "string",
-                      "format": "date-time"
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
                     {
                       "type": "null"
@@ -2688,8 +2707,7 @@
                 "id",
                 "status",
                 "scheduledAt"
-              ],
-              "additionalProperties": false
+              ]
             }
           },
           "errors": {
@@ -2698,7 +2716,9 @@
               "type": "object",
               "properties": {
                 "index": {
-                  "type": "integer"
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
                 },
                 "code": {
                   "type": "string"
@@ -2714,16 +2734,14 @@
                 "index",
                 "code",
                 "message"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
         "required": [
           "data",
           "errors"
-        ],
-        "additionalProperties": false
+        ]
       },
       "BatchRejected": {
         "type": "object",
@@ -2742,8 +2760,7 @@
             "required": [
               "code",
               "message"
-            ],
-            "additionalProperties": false
+            ]
           },
           "errors": {
             "type": "array",
@@ -2751,7 +2768,9 @@
               "type": "object",
               "properties": {
                 "index": {
-                  "type": "integer"
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
                 },
                 "code": {
                   "type": "string"
@@ -2767,16 +2786,14 @@
                 "index",
                 "code",
                 "message"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
         "required": [
           "error",
           "errors"
-        ],
-        "additionalProperties": false
+        ]
       },
       "MessageSummary": {
         "type": "object",
@@ -2816,6 +2833,9 @@
           },
           "tags": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {
               "type": "string"
             }
@@ -2838,7 +2858,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -2859,11 +2880,13 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -2881,8 +2904,7 @@
           "error",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "RescheduleResult": {
         "type": "object",
@@ -2899,15 +2921,15 @@
           },
           "scheduledAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
           "id",
           "status",
           "scheduledAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "CancelResult": {
         "type": "object",
@@ -2923,8 +2945,7 @@
         "required": [
           "id",
           "status"
-        ],
-        "additionalProperties": false
+        ]
       },
       "DomainKey": {
         "type": "object",
@@ -2991,7 +3012,9 @@
           "rateLimitPerMinute": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
               },
               {
                 "type": "null"
@@ -3001,7 +3024,9 @@
           "dailySendCap": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
               },
               {
                 "type": "null"
@@ -3012,7 +3037,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3023,7 +3049,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3034,7 +3061,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3045,7 +3073,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3063,7 +3092,8 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -3086,8 +3116,7 @@
           "lastUsedIp",
           "createdBy",
           "createdAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "CreateKeyRequest": {
         "type": "object",
@@ -3107,6 +3136,7 @@
             "maxLength": 100
           },
           "permissions": {
+            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string",
@@ -3117,42 +3147,42 @@
                 "templates",
                 "webhooks"
               ]
-            },
-            "minItems": 1
+            }
           },
           "allowedFrom": {
+            "maxItems": 50,
             "type": "array",
             "items": {
               "type": "string",
+              "maxLength": 320,
               "format": "email",
-              "maxLength": 320
-            },
-            "maxItems": 50
+              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+            }
           },
           "allowedRecipients": {
+            "maxItems": 50,
             "type": "array",
             "items": {
               "type": "string",
+              "maxLength": 320,
               "format": "email",
-              "maxLength": 320
-            },
-            "maxItems": 50
+              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+            }
           },
           "ipAllowlist": {
+            "maxItems": 50,
             "type": "array",
             "items": {
               "type": "string",
               "minLength": 1,
               "maxLength": 64
-            },
-            "maxItems": 50
+            }
           },
           "rateLimitPerMinute": {
             "anyOf": [
               {
                 "type": "integer",
-                "exclusiveMinimum": true,
-                "minimum": 0,
+                "exclusiveMinimum": 0,
                 "maximum": 100000
               },
               {
@@ -3176,7 +3206,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3188,8 +3219,7 @@
           "domain",
           "name",
           "permissions"
-        ],
-        "additionalProperties": false
+        ]
       },
       "RotateKeyRequest": {
         "type": "object",
@@ -3199,8 +3229,7 @@
             "minimum": 0,
             "maximum": 168
           }
-        },
-        "additionalProperties": false
+        }
       },
       "RevokeResult": {
         "type": "object",
@@ -3214,26 +3243,25 @@
         },
         "required": [
           "revoked"
-        ],
-        "additionalProperties": false
+        ]
       },
       "TemplateVariable": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-            "maxLength": 64
+            "maxLength": 64,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
           },
           "type": {
+            "default": "string",
             "type": "string",
             "enum": [
               "string",
               "number",
               "boolean",
               "url"
-            ],
-            "default": "string"
+            ]
           },
           "fallback": {
             "anyOf": [
@@ -3250,8 +3278,8 @@
             ]
           },
           "raw": {
-            "type": "boolean",
-            "default": false
+            "default": false,
+            "type": "boolean"
           }
         },
         "required": [
@@ -3267,9 +3295,9 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
           },
           "subject": {
+            "default": "",
             "type": "string",
-            "maxLength": 998,
-            "default": ""
+            "maxLength": 998
           },
           "html": {
             "anyOf": [
@@ -3294,24 +3322,26 @@
             ]
           },
           "variables": {
+            "default": [],
+            "maxItems": 100,
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "name": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-                  "maxLength": 64
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
                 },
                 "type": {
+                  "default": "string",
                   "type": "string",
                   "enum": [
                     "string",
                     "number",
                     "boolean",
                     "url"
-                  ],
-                  "default": "string"
+                  ]
                 },
                 "fallback": {
                   "anyOf": [
@@ -3328,17 +3358,15 @@
                   ]
                 },
                 "raw": {
-                  "type": "boolean",
-                  "default": false
+                  "default": false,
+                  "type": "boolean"
                 }
               },
               "required": [
                 "name"
               ],
               "additionalProperties": false
-            },
-            "maxItems": 100,
-            "default": []
+            }
           }
         },
         "required": [
@@ -3350,9 +3378,9 @@
         "type": "object",
         "properties": {
           "subject": {
+            "default": "",
             "type": "string",
-            "maxLength": 998,
-            "default": ""
+            "maxLength": 998
           },
           "html": {
             "anyOf": [
@@ -3377,24 +3405,26 @@
             ]
           },
           "variables": {
+            "default": [],
+            "maxItems": 100,
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "name": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-                  "maxLength": 64
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
                 },
                 "type": {
+                  "default": "string",
                   "type": "string",
                   "enum": [
                     "string",
                     "number",
                     "boolean",
                     "url"
-                  ],
-                  "default": "string"
+                  ]
                 },
                 "fallback": {
                   "anyOf": [
@@ -3411,17 +3441,15 @@
                   ]
                 },
                 "raw": {
-                  "type": "boolean",
-                  "default": false
+                  "default": false,
+                  "type": "boolean"
                 }
               },
               "required": [
                 "name"
               ],
               "additionalProperties": false
-            },
-            "maxItems": 100,
-            "default": []
+            }
           }
         },
         "additionalProperties": false
@@ -3431,10 +3459,14 @@
         "properties": {
           "version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "maximum": 9007199254740991
           },
           "variables": {
             "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
             "additionalProperties": {}
           }
         },
@@ -3450,7 +3482,9 @@
             "type": "string"
           },
           "version": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "subject": {
             "type": "string"
@@ -3474,18 +3508,18 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-                  "maxLength": 64
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
                 },
                 "type": {
+                  "default": "string",
                   "type": "string",
                   "enum": [
                     "string",
                     "number",
                     "boolean",
                     "url"
-                  ],
-                  "default": "string"
+                  ]
                 },
                 "fallback": {
                   "anyOf": [
@@ -3502,8 +3536,8 @@
                   ]
                 },
                 "raw": {
-                  "type": "boolean",
-                  "default": false
+                  "default": false,
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -3517,7 +3551,8 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -3530,8 +3565,7 @@
           "variables",
           "createdBy",
           "createdAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "TemplatePreview": {
         "type": "object",
@@ -3540,7 +3574,9 @@
             "type": "string"
           },
           "version": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "subject": {
             "type": "string"
@@ -3561,8 +3597,7 @@
           "subject",
           "html",
           "text"
-        ],
-        "additionalProperties": false
+        ]
       },
       "TemplateDeleted": {
         "type": "object",
@@ -3575,15 +3610,16 @@
             "const": true
           },
           "versions": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           }
         },
         "required": [
           "name",
           "deleted",
           "versions"
-        ],
-        "additionalProperties": false
+        ]
       },
       "CreateWebhookRequest": {
         "type": "object",
@@ -3593,6 +3629,7 @@
             "maxLength": 2000
           },
           "events": {
+            "maxItems": 9,
             "type": "array",
             "items": {
               "type": "string",
@@ -3607,8 +3644,7 @@
                 "message.clicked",
                 "message.received"
               ]
-            },
-            "maxItems": 9
+            }
           }
         },
         "required": [
@@ -3624,6 +3660,7 @@
             "maxLength": 2000
           },
           "events": {
+            "maxItems": 9,
             "type": "array",
             "items": {
               "type": "string",
@@ -3638,8 +3675,7 @@
                 "message.clicked",
                 "message.received"
               ]
-            },
-            "maxItems": 9
+            }
           },
           "enabled": {
             "type": "boolean"
@@ -3692,13 +3728,16 @@
             ]
           },
           "consecutiveFailures": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "disabledAt": {
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3709,7 +3748,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3718,11 +3758,13 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -3735,8 +3777,7 @@
           "previousSecretExpiresAt",
           "createdAt",
           "updatedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "WebhookDeleted": {
         "type": "object",
@@ -3752,8 +3793,7 @@
         "required": [
           "id",
           "deleted"
-        ],
-        "additionalProperties": false
+        ]
       },
       "WebhookTestResult": {
         "type": "object",
@@ -3761,8 +3801,7 @@
           "deliveryId": {
             "type": "string"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "WebhookDelivery": {
         "type": "object",
@@ -3788,13 +3827,16 @@
             ]
           },
           "attempts": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "nextAttemptAt": {
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3804,7 +3846,9 @@
           "lastStatusCode": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
               },
               {
                 "type": "null"
@@ -3815,7 +3859,8 @@
             "anyOf": [
               {
                 "type": "string",
-                "format": "date-time"
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               },
               {
                 "type": "null"
@@ -3824,7 +3869,8 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -3838,20 +3884,22 @@
           "lastStatusCode",
           "deliveredAt",
           "createdAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "AttemptLogEntry": {
         "type": "object",
         "properties": {
           "at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           },
           "status": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
               },
               {
                 "type": "null"
@@ -3872,8 +3920,7 @@
           "at",
           "status",
           "durationMs"
-        ],
-        "additionalProperties": false
+        ]
       },
       "ReceivedEmail": {
         "type": "object",
@@ -3900,8 +3947,7 @@
             },
             "required": [
               "email"
-            ],
-            "additionalProperties": false
+            ]
           },
           "toEmails": {
             "type": "array",
@@ -3926,7 +3972,8 @@
           },
           "receivedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -3940,8 +3987,7 @@
           "snippet",
           "spam",
           "receivedAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "ReceivedAttachment": {
         "type": "object",
@@ -3962,7 +4008,9 @@
             "type": "string"
           },
           "size": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "risk": {
             "type": "string",
@@ -3991,8 +4039,7 @@
           "risk",
           "contentId",
           "inline"
-        ],
-        "additionalProperties": false
+        ]
       },
       "RawDownload": {
         "type": "object",
@@ -4003,22 +4050,23 @@
           },
           "expiresAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
           "url",
           "expiresAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "AddSuppressionRequest": {
         "type": "object",
         "properties": {
           "email": {
             "type": "string",
+            "maxLength": 320,
             "format": "email",
-            "maxLength": 320
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
           },
           "detail": {
             "type": "string",
@@ -4059,7 +4107,8 @@
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
         "required": [
@@ -4069,8 +4118,7 @@
           "reason",
           "detail",
           "createdAt"
-        ],
-        "additionalProperties": false
+        ]
       },
       "SuppressionDeleted": {
         "type": "object",
@@ -4095,8 +4143,7 @@
           "object",
           "email",
           "deleted"
-        ],
-        "additionalProperties": false
+        ]
       },
       "WebhookEventType": {
         "type": "string",
