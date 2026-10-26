@@ -33,7 +33,7 @@ Requirements:
 - pnpm 10.25.0, Git, and Bash (use WSL on Windows).
 - A Cloudflare account with R2 activated and Cloudflare Access. Workers Free runs the inbox profile; Workers Paid runs the full profile.
 - A domain on Cloudflare DNS for mail. The app can run on workers.dev before you connect one.
-- Two-factor sign-in on Cloudflare and GitHub, with security keys where possible.
+- Require two-factor sign-in on Cloudflare and GitHub. Use security keys where possible.
 
 Follow the [setup guide](docs/setup.md) for the full procedure:
 
@@ -51,7 +51,7 @@ Follow the [setup guide](docs/setup.md) for the full procedure:
 To update, follow the [upgrade guide](docs/upgrade.md): rerun the installer from the newer source with the same settings.
 To remove an installation, follow the [uninstall guide](docs/uninstall.md).
 
-Releases are unsigned. Published SHA-256 checksums confirm the download is unchanged, not who published it. Review changes before deploying them.
+Prefer reviewed signed release tags over `main` when they are available. Current releases are unsigned: published SHA-256 checksums confirm the download is unchanged, not who published it. Review changes before deploying them.
 
 ## Sending restrictions and cost
 
