@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "turbo": "^2.5.0",
-    "typescript": "^5.8.3",
+    "typescript": "^7.0.2",
     "wrangler": "^4.151.1"
   },
   "pnpm": {
