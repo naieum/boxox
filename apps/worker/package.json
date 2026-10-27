@@ -29,7 +29,7 @@
     "@vitest/runner": "^4.1.11",
     "@vitest/snapshot": "^4.1.12",
     "typescript": "^5.8.3",
-    "vitest": "^4.1.12",
+    "vitest": "^5.0.5",
     "wrangler": "^4.151.1"
   }
 }
