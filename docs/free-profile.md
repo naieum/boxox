@@ -22,12 +22,11 @@ Cloudflare allows verified-destination sends on Free, but this Box Ox profile do
 
 ## Plan detection
 
-Automatic detection uses Cloudflare’s account subscription API and needs **Billing Read**.
-A separate `BOXOX_BILLING_TOKEN` can supply that read-only permission while Wrangler handles deployment.
-Keep the token in your secret manager or environment. It is not stored in the Worker.
+Cloudflare's sign-in for tools cannot read billing, so the installer cannot see your Workers plan.
+On a first install it asks once whether the account is on Workers Free or Workers Paid.
+Later runs read the installed profile from the Worker.
 
-Wrangler OAuth cannot read billing subscriptions.
-If detection is unavailable, check **Workers & Pages** in Cloudflare, then choose the matching profile:
+Check **Workers & Pages** in Cloudflare if unsure. To answer in advance, choose the matching profile:
 
 ```sh
 BOXOX_PLAN=free pnpm run deploy

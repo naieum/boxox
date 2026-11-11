@@ -18,7 +18,9 @@ Both templates contain the complete application workspace. The main branch remai
 
 The button copies this repository into your GitHub account and opens Cloudflare's deployment configuration.
 It deploys the mail application. The separate `boxox.dev` website stays with this project.
-Access sign-in and mail-domain onboarding follow the deployment.
+Creating your passkey and connecting a mail domain follow the deployment.
+
+**The button is the path with more to prepare.** Cloudflare's Workers Builds needs a deployment API token you create, because its default token cannot manage every resource Box Ox uses. The [local installer](https://boxox.dev/setup/) needs no token at all: it uses your Cloudflare sign-in on your own computer.
 
 ## Prepare your account
 
@@ -47,8 +49,7 @@ Cloudflare can change permission labels. Compare them with the [API permission r
 For Wrangler account discovery, include the user permissions **User Details: Read** and **Memberships: Read**.
 Worker deployment permissions also cover the Workflows and observability configuration.
 
-The installer attempts to register a Cloudflare OAuth client. If the token lacks that permission, deployment continues with a manual connection step.
-See [Cloudflare connection](https://boxox.dev/docs/cloudflare-connection/) for client registration and the temporary setup-token alternative.
+The deployment token is the only credential this path needs. Box Ox registers no application with Cloudflare.
 
 The button starts on workers.dev. If you later use a custom hostname, grant **Workers Routes: Edit** for its zone.
 The Free template selects `free` without a billing API lookup. For the Paid template, set `BOXOX_PLAN=paid` in Builds.
@@ -76,15 +77,12 @@ Fill the application fields shown by the deployment form:
 | Field | Value |
 | --- | --- |
 | `CF_ACCOUNT_ID` | The account ID selected for this installation. |
-| `OWNER_EMAIL` | The email address you will use with Cloudflare Access. |
-| `CF_API_TOKEN` | A temporary [domain setup token](https://boxox.dev/docs/owner-access/#create-the-setup-token). This is separate from the deployment token. |
-| `AGENT_JWT_SECRET` | A private value generated with `openssl rand -base64 32`. It signs agent credentials only. Preserve it when updating. |
-| `BOXOX_SIGNING_SECRET` | A second, different private value from `openssl rand -base64 32`. It derives every other key: signed links and images in mail, tracking, download links, sealed tokens. Preserve it when updating. |
+| `OWNER_EMAIL` | The email address of the installation owner. |
 | `BOXOX_EDITION`, Free template only | Keep `free`. Use the Paid button if you need the full profile. |
 
 `CF_ACCOUNT_ID`, `OWNER_EMAIL`, and `BOXOX_EDITION` are non-secret Wrangler variables.
-`CF_API_TOKEN`, `AGENT_JWT_SECRET`, and `BOXOX_SIGNING_SECRET` are Worker secrets.
-Build variables and Worker runtime secrets have separate scopes.
+The form asks for no secrets. The installer generates the two signing secrets (`AGENT_JWT_SECRET`, `BOXOX_SIGNING_SECRET`) on the first deployment and keeps them on later ones; do not rotate them as a routine update.
+If the form shows a field for `CF_API_TOKEN` or either signing secret, leave it empty.
 If you override `CF_ACCOUNT_ID` or `OWNER_EMAIL` in Builds, those build values take precedence over the form's Wrangler values.
 For token and variable configuration, see [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
 
@@ -96,12 +94,21 @@ Disable **Preview builds** for the initial installation. Review resource isolati
 
 ## Finish the installation
 
-1. Configure the Access application, owner policy, and public-path exceptions in the [setup guide](https://boxox.dev/docs/owner-access/#configure-cloudflare-access).
-2. Set `ACCESS_AUD` and `TEAM_DOMAIN` as described there. Protected app routes refuse access until both are present.
-3. Sign in, open `/setup`, and review DNS, receiving, sending, and mail-processing choices.
+1. **Create your passkey.** The end of the build log shows a single-use sign-in link for the owner. Open it and choose **Create passkey**. It expires in 24 hours, and anyone who can read the log can use it first, so open it promptly. See [owner sign-in](https://boxox.dev/docs/owner-access/).
+2. **Connect your mail domain** from your own computer. Clone your copied repository, then:
+
+   ```sh
+   pnpm install --frozen-lockfile
+   pnpm run deploy
+   pnpm run domain example.com
+   ```
+
+   `pnpm run deploy` signs in through Wrangler, redeploys the same source and records the installation's settings locally; `pnpm run domain` then uses that sign-in. If the first link expired, `pnpm run owner-link` makes a new one from the same checkout.
+3. Open `/setup` and choose your mail-processing options.
 4. Verify receiving and agent grants. For Paid, also verify sending and delivery events.
-5. Remove the temporary `CF_API_TOKEN` after setup.
-6. Protect your copied repository's deployment branch. Review changes before Builds deploys them.
+5. Protect your copied repository's deployment branch. Review changes before Builds deploys them.
+
+Cloudflare Access is optional; the setup guide describes using it instead of passkeys.
 
 The installer checks that `/health` reports the deployed source commit. That check does not prove owner sign-in or mail delivery.
 The form-value and resource-reuse paths have offline script tests. We have not yet verified a fresh hosted button installation end to end.

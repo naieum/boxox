@@ -188,14 +188,33 @@ Test: apps/worker/test/preview.test.ts::previews only run when the user asks
 
 ### Leaked Cloudflare API token (it can edit DNS)
 
-**Threat.** The setup token leaks and is used to change DNS or other account resources.
+**Threat.** A Cloudflare API token stored in the app leaks and is used to change DNS or other account resources.
 
-**Defence.** Least-privilege scopes, limited to the chosen zones. Only the setup and domain pages use the
-token. The wizard recommends removing the token after setup (add it again to add domains), and the app
-works without it. The token is a Worker secret, set with `wrangler secret put` through stdin, and it is
-never logged.
+**Defence.** A normal installation stores none: mail domains are connected from the installer's computer with
+`pnpm run domain`. A token is only present if the owner adds one, for enabling AI (AI Gateway Edit only) or the
+advanced domain connection. It is a Worker secret, set with `wrangler secret put` through stdin, never logged, and
+the guides say to remove it afterwards.
 
 Test: apps/worker/test/cloudflare-client.test.ts::reports a clear error when no token is configured
+
+### Owner sign-in without Cloudflare Access
+
+**Threat.** Someone who is not the owner signs in: by guessing or replaying a credential, by stealing the database,
+by using the owner's sign-in link, or from another website.
+
+**Defence.** Sign-in is by passkey, bound to the app's own hostname and requiring the device unlock; a passkey made
+for another site, a replayed challenge, or one without the unlock is refused. The database holds public keys and
+SHA-256 digests of session cookies and unused links, none of which can sign anyone in. A first passkey is only issued
+through a single-use, expiring link: the owner's is written to the database by the installer, which needs Cloudflare
+account access, and a member's is created by the owner. The link travels in the URL fragment, so it does not reach
+request logs. Mutating requests need a same-origin `Origin` and a custom header. Sign-in endpoints are rate limited
+per address. With Access values present, Cloudflare Access decides instead and this path is switched off.
+Residual risk: whoever opens the owner link first becomes the owner, and anyone with Cloudflare account access can
+mint one. The Cloudflare account is the root of control, as it already is for the mail itself.
+
+Test: apps/worker/test/signin.test.ts::rejects a passkey made for another site, without the device unlock, or against a replayed challenge
+Test: apps/worker/test/signin.test.ts::refuses unknown, expired and half-used links, and passkeys nobody registered
+Test: apps/worker/test/health.test.ts::without Access, stays closed to anyone without a Box Ox session
 
 ### Compromised or over-eager agent
 

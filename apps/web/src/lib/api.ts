@@ -1,3 +1,4 @@
+import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import type {
   AddressKind,
   AddressStatus,
@@ -326,7 +327,23 @@ export const api = {
   processingSettings: () => request<ProcessingSettings>("/api/settings/processing"),
   updateProcessing: (body: Partial<ProcessingChoices>) => request<ProcessingSettings>("/api/settings/processing", { method: "PATCH", body: JSON.stringify(body) }),
   setAddressAiDisabled: (id: string, aiDisabled: boolean) => request<{ id: string; aiDisabled: boolean }>(`/api/settings/processing/addresses/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ aiDisabled }) }),
-  me: () => request<{ user: Me; capabilities?: Capabilities }>("/api/me"),
+  me: () => request<{ user: Me; capabilities?: Capabilities; signin?: "access" | "native" }>("/api/me"),
+  /** Box Ox sign-in (passkeys). Unused when Cloudflare Access signs people in. */
+  auth: {
+    state: () => request<{ mode: "access" | "native"; user: Me | null; ownerReady?: boolean }>("/api/auth/state"),
+    loginBegin: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>("/api/auth/login/begin", { method: "POST" }),
+    loginFinish: (response: unknown) => request<{ user: Me }>("/api/auth/login/finish", { method: "POST", body: JSON.stringify({ response }) }),
+    inviteBegin: (code: string) => request<{ options: PublicKeyCredentialCreationOptionsJSON; email: string; role: string }>("/api/auth/invite/begin", { method: "POST", body: JSON.stringify({ code }) }),
+    inviteFinish: (response: unknown, name: string) => request<{ user: Me }>("/api/auth/invite/finish", { method: "POST", body: JSON.stringify({ response, name }) }),
+    logout: () => request<{ ok: true }>("/api/auth/logout", { method: "POST" }),
+    passkeys: () => request<{ passkeys: { id: string; name: string; createdAt: number; lastUsedAt: number | null }[] }>("/api/auth/passkeys"),
+    passkeyBegin: () => request<{ options: PublicKeyCredentialCreationOptionsJSON }>("/api/auth/passkeys/begin", { method: "POST" }),
+    passkeyFinish: (response: unknown, name: string) => request<{ ok: true }>("/api/auth/passkeys/finish", { method: "POST", body: JSON.stringify({ response, name }) }),
+    removePasskey: (id: string) => request<{ ok: true }>(`/api/auth/passkeys/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    members: () => request<{ members: { email: string; name: string; role: string; passkeys: number }[]; pending: { email: string; name: string; expiresAt: number }[] }>("/api/auth/members"),
+    invite: (email: string, name: string) => request<{ email: string; link: string; expiresAt: number }>("/api/auth/members", { method: "POST", body: JSON.stringify({ email, name }) }),
+    removeMember: (email: string) => request<{ ok: true }>(`/api/auth/members/${encodeURIComponent(email)}`, { method: "DELETE" }),
+  },
   domains: {
     list: (orgId: string) => request<{ domains: DomainRow[] }>(`/api/orgs/${orgId}/domains`),
     patch: (orgId: string, domainId: string, body: { unknownMailPolicy?: UnknownMailPolicy; catchAllAddressId?: string | null }) =>

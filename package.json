@@ -8,19 +8,19 @@
   "cloudflare": {
     "bindings": {
       "OWNER_EMAIL": {
-        "description": "Email used to sign in as the installation owner. Configure Cloudflare Access after deployment."
+        "description": "Email address of the installation owner. After deployment, open the single-use sign-in link at the end of the build log to create your passkey."
       },
       "CF_ACCOUNT_ID": {
         "description": "Account ID for this installation, from the Cloudflare dashboard. Use the same account as the build token."
       },
       "CF_API_TOKEN": {
-        "description": "Temporary domain setup token. This is separate from the Workers Builds deployment token. See https://boxox.dev/docs/deploy-button/."
+        "description": "Optional and normally left unset. Only for enabling AI (AI Gateway Edit) or the advanced in-app domain connection."
       },
       "AGENT_JWT_SECRET": {
-        "description": "Signs agent credentials only. Generate with openssl rand -base64 32 and keep it stable across deployments."
+        "description": "Leave unset: the installer generates it on the first deployment and keeps it. Signs agent credentials only."
       },
       "BOXOX_SIGNING_SECRET": {
-        "description": "Root for every other key: signed links and images in mail, tracking, download links, sealed tokens. Generate a different value with openssl rand -base64 32 and keep it stable across deployments."
+        "description": "Leave unset: the installer generates it on the first deployment and keeps it. Root for every other key."
       }
     }
   },
@@ -32,6 +32,8 @@
     "db:generate": "pnpm --filter @boxox/db generate",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "deploy": "bash scripts/deploy.sh",
+    "owner-link": "node scripts/owner-link.mjs",
+    "domain": "node scripts/domain.mjs",
     "release:privacy": "python3 scripts/check-release-privacy.py --tracked"
   },
   "devDependencies": {

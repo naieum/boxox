@@ -3,7 +3,7 @@ import type { Db } from "../db";
 import type { Env } from "../env";
 
 export interface SessionUser {
-  /** The Access identity's email, lowercased; it is also the user's id. */
+  /** The signed-in email, lowercased; it is also the user's id. */
   id: string;
   email: string;
   name: string;
@@ -23,10 +23,11 @@ export type AppContext = {
 };
 
 export { bypassesAccess, createAccessMiddleware, requireAccess } from "./access";
+export { requireIdentity } from "./signin";
 export { CSRF_HEADER, requireSameOrigin } from "./csrf";
 export { CONTENT_SECURITY_POLICY, securityHeaders } from "./security-headers";
 
-/** Defence in depth behind requireAccess, which sets the user on every protected path. */
+/** Defence in depth behind requireIdentity, which sets the user on every protected path. */
 export const requireSession = createMiddleware<AppContext>(async (c, next) => {
   if (!c.get("user")) {
     return c.json({ error: { code: "unauthorized", message: "Sign in required" } }, 401);

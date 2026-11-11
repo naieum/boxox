@@ -78,10 +78,11 @@ describe("post-setup processing controls", () => {
   it("will not enable AI or change providers without gateway verification and credits", async () => {
     const before = await db.query.aiSettings.findFirst();
     const switched = await call("PATCH", { provider: "openai" });
-    expect(switched.status).toBe(412);
+    expect(switched.status).toBe(409);
+    expect(switched.body.error).toMatchObject({ code: "ai_credential_required", message: expect.stringContaining("AI Gateway Edit") });
     expect((await db.query.aiSettings.findFirst())?.provider).toBe(before?.provider);
     await call("PATCH", { ai: false });
-    expect((await call("PATCH", { ai: true, provider: "cloudflare" })).status).toBe(412);
+    expect((await call("PATCH", { ai: true, provider: "cloudflare" })).status).toBe(409);
     const fetcher = vi.fn(async () => Response.json({ success: true, result: { balance: 0 } })) as unknown as typeof fetch;
     const broke = await call("PATCH", { ai: true, provider: "openai" }, { fetcher, token: true });
     expect(broke.status).toBe(409);

@@ -263,12 +263,33 @@ function DomainsStep({ state }: { state: SetupState }) {
     enabled: state.tokenConfigured,
   });
   return (
-    <Step n={2} title="Domains" done={state.domains.length > 0}>
+    <Step n={state.tokenConfigured ? 2 : 1} title="Domains" done={state.domains.length > 0}>
       <div className="mb-2 text-[#9BA1AD]">
         {state.capabilities?.sending === false ? "Choose a domain for incoming mail." : "Pick the domains Box Ox sends from, and the ones it receives for."} You see each domain's current mail records
         before anything changes.
       </div>
-      {!state.tokenConfigured && <Warning>Configure the API token first.</Warning>}
+      {!state.tokenConfigured && (
+        <>
+          {state.domains.map((d) => (
+            <div key={d.id} className="mb-2 flex items-center gap-2">
+              <Check className="size-4 text-ox-success" />
+              <span className="font-medium">{d.name}</span>
+              <span className="text-[#7c838f]">
+                {[d.receivingEnabled && "receiving", d.sendingEnabled && "sending"].filter(Boolean).join(" and ") || d.status}
+              </span>
+            </div>
+          ))}
+          <div className="rounded-xl border border-white/10 bg-white/2 p-4">
+            <div className="mb-2">
+              {state.domains.length ? "To connect another domain" : "To connect your mail domain"}, run this where you installed Box Ox, then reload this page:
+            </div>
+            <code className="block rounded-lg bg-black/40 px-3 py-2 font-mono text-[12.5px]">pnpm run domain example.com</code>
+            <div className="mt-2 text-xs text-[#7c838f]">
+              It uses your Cloudflare sign-in on that computer, shows what will change, and asks before it changes anything. The domain must already be on Cloudflare DNS in this account.
+            </div>
+          </div>
+        </>
+      )}
       {zones.error && <Warning>{(zones.error as Error).message}</Warning>}
       {zones.data?.zones.map((z) => (
         <ZoneRow key={z.id} name={z.name} onboarded={state.domains.find((d) => d.name === z.name)} />
@@ -311,7 +332,7 @@ function ProcessingStep({ state }: { state: SetupState }) {
     choice.localFilters !== null && choice.reputationLookups !== null && choice.ai !== null && (!choice.ai || !!choice.provider);
 
   return (
-    <Step n={3} title={c?.title ?? "How your mail is processed"} done={state.missingChoices.length === 0}>
+    <Step n={state.tokenConfigured ? 3 : 2} title={c?.title ?? "How your mail is processed"} done={state.missingChoices.length === 0}>
       <div className="mb-3 text-[#9BA1AD]">Switch each group on or off. Nothing is on until you choose it.</div>
       {c?.groups.filter(g => g.id !== "ai" || state.capabilities?.ai !== false).map((g) => (
         <div key={g.id} className="mb-4 rounded-[10px] border border-white/7 p-4">
@@ -383,11 +404,11 @@ function TestSendStep({ state }: { state: SetupState }) {
   const send = useMutation({
     mutationFn: () => setupApi<{ messageId: string; note: string }>("/test-send", { method: "POST", body: { from, to } }),
   });
-  if (state.capabilities?.sending === false) return <Step n={4} title="Test incoming mail">
+  if (state.capabilities?.sending === false) return <Step n={state.tokenConfigured ? 4 : 3} title="Test incoming mail">
     <ol className="list-decimal space-y-2 pl-5 text-[#9BA1AD]"><li>Finish setup and create a mailbox in Domains.</li><li>Send a message to it from an outside mailbox you control.</li><li>Open Inbox and confirm the message arrived.</li></ol>
   </Step>;
   return (
-    <Step n={4} title="Send a test email" done={send.isSuccess}>
+    <Step n={state.tokenConfigured ? 4 : 3} title="Send a test email" done={send.isSuccess}>
       {!sendable.length ? (
         <div className="text-[#7c838f]">Set up a domain for sending first.</div>
       ) : (
@@ -431,12 +452,12 @@ export function SetupPage() {
 
   return (
     <PageContainer width={820}>
-      <PageHeader title="Set up Box Ox" description="Connect your Cloudflare account, your domains and how your mail is processed." />
+      <PageHeader title="Set up Box Ox" description="Connect your mail domain and choose how your mail is processed." />
       {s?.capabilities?.edition === "free" && <Panel className="mb-4 px-5 py-4 text-[13px]">Workers Free · Inbox, search, mail-reading agents, and inbound webhooks. Outbound sending, AI, and Browser Run are not installed.</Panel>}
       {state.error && <Warning>{(state.error as Error).message}</Warning>}
       {s?.completed ? (
         <Panel className="px-5 py-4 text-[13px]">
-          Setup is finished. {finish.data?.advice ?? "You can remove the Cloudflare API token now (wrangler secret delete CF_API_TOKEN); add it again to onboard more domains."}
+          Setup is finished. {finish.data?.advice ?? ""}
           <div className="mt-3">
             <a className="text-ox underline" href="/">
               Go to your inbox
@@ -446,7 +467,7 @@ export function SetupPage() {
       ) : (
         s && (
           <>
-            <TokenStep />
+            {s.tokenConfigured && <TokenStep />}
             <DomainsStep state={s} />
             <ProcessingStep state={s} />
             <TestSendStep state={s} />

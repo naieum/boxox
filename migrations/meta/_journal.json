@@ -71,6 +71,13 @@
       "when": 1792419500941,
       "tag": "0009_agent_send_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792419500942,
+      "tag": "0010_owner_signin",
+      "breakpoints": true
     }
   ]
 }
