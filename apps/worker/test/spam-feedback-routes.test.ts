@@ -60,6 +60,20 @@ describe("owner spam feedback", () => {
     expect(await db.select().from(spamFingerprints)).toHaveLength(1);
   });
 
+  it("lists quarantined mail and releases it to the inbox as not spam", async () => {
+    const item = await seed();
+    await db.update(threads).set({ folder: "quarantine" }).where(eq(threads.id, item.threadId));
+    const listed = async (folder: string) =>
+      ((await (await call(item.orgId, `?folder=${folder}`)).json()) as { threads: { id: string }[] }).threads.map((t) => t.id);
+    expect(await listed("quarantine")).toContain(item.threadId);
+    expect(await listed("inbox")).not.toContain(item.threadId);
+
+    expect((await call(item.orgId, `/${item.threadId}/actions`, "not_spam")).status).toBe(200);
+    expect(await listed("inbox")).toContain(item.threadId);
+    expect(await listed("quarantine")).not.toContain(item.threadId);
+    expect(await db.select().from(spamTraining)).toMatchObject([{ messageId: item.messageId, label: "ham" }]);
+  });
+
   it("refuses unauthorized feedback and keeps member folder changes out of owner training", async () => {
     const item = await seed();
     const path = `/${item.threadId}/actions`;

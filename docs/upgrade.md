@@ -71,11 +71,17 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.4.10 to 2.4.11
+
+- **Quarantine** is now a folder in the sidebar. Mail quarantined by any earlier release appears there.
+- Conversations in the inbox have **Mark as spam**; quarantined ones have **Not phishing: move to inbox**.
+- No database migration, new secret, or reconnection is required.
+
 ### From 2.4.9 to 2.4.10
 
 - New local rules catch phishing that poses as your mail system. They need **Local filters** on; review **Settings → Processing** if you left them off.
 - After the upgrade, Box Ox scores the last 30 days of inbox mail again, hourly in small batches, and moves phishing it finds to Spam or Quarantine. No AI model is called. Mail you marked **Not spam** is left alone.
-- Check Spam and Quarantine the day after upgrading, and mark anything that was moved wrongly as **Not spam**.
+- Check Spam and Quarantine the day after upgrading, and mark anything that was moved wrongly as **Not spam**. Quarantine can be opened from 2.4.11; upgrade straight to that release.
 - No database migration, new secret, or reconnection is required.
 
 ### From 2.4.8 to 2.4.9

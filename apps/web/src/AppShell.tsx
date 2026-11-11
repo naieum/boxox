@@ -14,6 +14,7 @@ import {
   Search,
   Send,
   ShieldAlert,
+  ShieldX,
   SlidersVertical,
   Star,
   Trash2,
@@ -47,6 +48,7 @@ const MAIL_NAV = [
   { to: "/folder/scheduled", label: "Scheduled", icon: Clock },
   { to: "/folder/archive", label: "Archive", icon: Archive },
   { to: "/folder/spam", label: "Spam", icon: ShieldAlert },
+  { to: "/folder/quarantine", label: "Quarantine", icon: ShieldX },
   { to: "/folder/trash", label: "Trash", icon: Trash2 },
 ];
 

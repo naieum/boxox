@@ -1,6 +1,6 @@
 # Box Ox 2.4.10
 
-Released November 11, 2026.
+Released November 11, 2026. Install [2.4.11](https://boxox.dev/docs/releases/2.4.11/) instead: it adds the Quarantine folder to the app, which this release needs.
 
 This release closes a gap in phishing detection. A message that poses as your mail system, sent from a domain that passes SPF, DKIM and DMARC and linking to a login page on a reputable file host, was delivered to the inbox. Every earlier 2.x release is affected, and a new mailbox most of all. There is no database migration, new secret, new setting, or change to approved agent access. SDK 0.2.0, CLI 0.3.0, and email skill 0.5.0 keep their published bytes.
 
