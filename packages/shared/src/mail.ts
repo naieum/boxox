@@ -26,7 +26,7 @@ export type AddressStatus = (typeof ADDRESS_STATUSES)[number];
 export const GRANT_PERMISSIONS = ["read", "send", "send_new", "webhook", "classify"] as const;
 export type GrantPermission = (typeof GRANT_PERMISSIONS)[number];
 
-export const THREAD_FOLDERS = ["inbox", "sent", "archive", "trash", "unrouted", "spam"] as const;
+export const THREAD_FOLDERS = ["inbox", "sent", "archive", "trash", "unrouted", "spam", "quarantine"] as const;
 export type ThreadFolder = (typeof THREAD_FOLDERS)[number];
 
 export const addressCreateSchema = z.object({

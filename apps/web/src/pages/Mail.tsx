@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronLeft,
   RotateCcw,
+  ShieldAlert,
   ShieldCheck,
   Star,
   Trash2,
@@ -45,6 +46,7 @@ const EMPTY_COPY: Record<string, [string, string]> = {
   scheduled: ["Nothing scheduled", "Emails queued for later will show up here."],
   archive: ["Archive is empty", "Archived mail stays searchable, out of your way."],
   spam: ["No spam", "Blocked and unverified senders end up here. Enjoy the quiet."],
+  quarantine: ["Nothing in Quarantine", "Mail that looks like phishing is held here with its links turned off."],
   trash: ["Trash is empty", "Deleted messages are kept for 30 days, then removed."],
   address: ["No mail here yet", "Hand this address out and messages will land here."],
   unrouted: [
@@ -218,6 +220,7 @@ function ReadingPane({
         action === "archive" ||
         action === "trash" ||
         action === "restore" ||
+        action === "spam" ||
         action === "not_spam" ||
         action === "block_sender"
       ) {
@@ -255,10 +258,10 @@ function ReadingPane({
           >
             <RotateCcw className="size-[17px]" strokeWidth={1.6} />
           </button>
-        ) : t?.thread.folder === "spam" ? (
+        ) : t?.thread.folder === "spam" || t?.thread.folder === "quarantine" ? (
           <>
             <button
-              title="Not spam"
+              title={t.thread.folder === "quarantine" ? "Not phishing: move to inbox" : "Not spam"}
               onClick={() => act.mutate("not_spam")}
               className="flex size-8 items-center justify-center rounded-lg text-[#9BA1AD] hover:bg-white/5 hover:text-foreground"
             >
@@ -288,6 +291,15 @@ function ReadingPane({
             >
               <Archive className="size-[17px]" strokeWidth={1.6} />
             </button>
+            {t?.thread.folder === "inbox" && (
+              <button
+                title="Mark as spam"
+                onClick={() => act.mutate("spam")}
+                className="flex size-8 items-center justify-center rounded-lg text-[#9BA1AD] hover:bg-white/5 hover:text-foreground"
+              >
+                <ShieldAlert className="size-[17px]" strokeWidth={1.6} />
+              </button>
+            )}
             <button
               title="Block sender"
               onClick={() => act.mutate("block_sender")}
