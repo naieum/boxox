@@ -29,7 +29,10 @@ export interface Env {
   BUILD_SHA?: string;
   /** Installer identity allowed to manage this single-tenant installation. */
   OWNER_EMAIL?: string;
-  /** Cloudflare Access application audience tag; the app fails closed without it. */
+  /**
+   * Cloudflare Access application audience tag. With this and TEAM_DOMAIN set,
+   * Access signs people in; without them the app uses its own passkey sign-in.
+   */
   ACCESS_AUD?: string;
   /** Access team domain, e.g. https://you.cloudflareaccess.com. */
   TEAM_DOMAIN?: string;
@@ -91,5 +94,7 @@ export interface Env {
   INBOUND_RATE_LIMIT: RateLimit;
   INBOUND_GLOBAL_RATE_LIMIT: RateLimit;
   AGENT_RATE_LIMIT: RateLimit;
+  /** Box Ox sign-in endpoints, per IP. Absent on installations deployed before 2.5.0 until their next deploy. */
+  SIGNIN_RATE_LIMIT?: RateLimit;
   ANALYTICS: AnalyticsEngineDataset;
 }

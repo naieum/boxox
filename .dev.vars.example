@@ -1,22 +1,25 @@
 # Copy to .dev.vars for local development (never commit .dev.vars).
 # Set production values using Wrangler secrets as described in docs/setup.md.
 
-# Cloudflare API token for /setup (zone onboarding, routing, event subscriptions).
-# Create it from the README's pre-filled link; remove it after setup if you like.
-CF_API_TOKEN=replace-me
+# Optional. Only for enabling AI (AI Gateway Edit) or the advanced in-app domain
+# connection. Mail domains are connected with "pnpm run domain example.com".
+# CF_API_TOKEN=replace-me
 # Non-secret CF_ACCOUNT_ID and OWNER_EMAIL live in wrangler.jsonc vars.
+
+# The installer generates both secrets below on the first deployment and keeps
+# them; nobody has to make or paste them. Set them here only for local development.
 
 # Agent auth (required for /api/agent/* and /mcp; those routes 503 without it).
 # Generate with: openssl rand -base64 32
-AGENT_JWT_SECRET=replace-me-base64-32-bytes
+# AGENT_JWT_SECRET=replace-me-base64-32-bytes
 
 # Root for every other key: signed links and images in mail, tracking tokens,
 # raw-download URLs, the domain-connection cookie, Cloudflare OAuth token
 # sealing and webhook secret sealing. Keep it different from AGENT_JWT_SECRET.
 # Generate with: openssl rand -base64 32
-BOXOX_SIGNING_SECRET=replace-me-base64-32-bytes
+# BOXOX_SIGNING_SECRET=replace-me-base64-32-bytes
 
-# Cloudflare Access (set after creating the Access application). The app
-# refuses every request until both are present.
+# Optional: Cloudflare Access instead of Box Ox passkey sign-in. With both set,
+# Access decides who is signed in.
 # ACCESS_AUD=
 # TEAM_DOMAIN=https://<team>.cloudflareaccess.com

@@ -28,21 +28,20 @@ For sending only, keep your current MX records.
 
 ## Authorize setup
 
-Automatic plan detection needs Billing Read. Wrangler OAuth does not include it.
-Your agent can use a separate read-only `BOXOX_BILLING_TOKEN` from your secret manager.
-If unavailable, check the Workers plan in Cloudflare and choose `BOXOX_PLAN=free` or `BOXOX_PLAN=paid`.
+The installer cannot read your Workers plan on a first install, because Cloudflare's sign-in for tools has no billing permission.
+Tell your agent whether the account is on Workers Free or Workers Paid; it sets `BOXOX_PLAN=free` or `BOXOX_PLAN=paid`.
 The installer never purchases or changes a plan.
 Read the [Workers Free guide](https://boxox.dev/docs/free/) for the inbox install’s features and testing status.
 
-Authorize your agent through the Cloudflare tools you use.
-Deployment credentials and the temporary domain-setup token are separate from Box Ox mail keys.
-Do not paste secrets into a public chat or commit them to source.
+If the computer is not signed in to Cloudflare, the installer opens Cloudflare's page asking you to allow Wrangler,
+Cloudflare's own deployment tool. You approve that yourself. It is the only credential step: there are no API tokens
+for you or your agent to create, and nothing to paste into a chat.
 
-Your agent must configure Cloudflare Access for owner sign-in.
-After initial onboarding, remove the temporary Worker setup token. Normal mail continues through service bindings.
-For later domains, use **Domains → Add domain → Connect with Cloudflare**. Approve access once; Box Ox renews it automatically. Your agent must register the installation’s private OAuth client if its deployment credential lacks OAuth Client Write. See [Cloudflare connection setup](/docs/cloudflare-connection/).
+When the installer finishes it prints a single-use link. **Open that link yourself** to create your passkey;
+it makes whoever opens it the owner, so your agent should hand it to you and not open it.
+Your agent then connects your mail domain with `pnpm run domain example.com`, after showing you what will change.
 
-See [owner access and token scopes](https://boxox.dev/docs/owner-access/) for the exact permissions.
+See [owner sign-in](https://boxox.dev/docs/owner-access/) for how sign-in works and how to add other people.
 
 ## Review the result
 

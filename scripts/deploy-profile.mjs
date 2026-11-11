@@ -20,14 +20,19 @@ export function workersPlanFromSubscriptions(subscriptions) {
   return 'free';
 }
 
-export async function selectDeploymentPlan(api, choice = 'auto') {
+export async function selectDeploymentPlan(api, choice = 'auto', options = {}) {
   if (!['auto', 'free', 'paid'].includes(choice)) throw new Error('BOXOX_PLAN must be auto, free, or paid');
   if (choice !== 'auto') return { plan: choice, source: 'installer choice' };
+  // An installed profile is a fact about this installation; a Paid one is never downgraded by a guess.
+  if (options.installed === 'free' || options.installed === 'paid') return { plan: options.installed, source: 'existing installation' };
   try {
     return { plan: workersPlanFromSubscriptions(await api('GET', '/subscriptions')), source: 'Cloudflare subscription' };
   } catch (error) {
     if (error.status !== 401 && error.status !== 403) throw error;
-    throw new Error('Cloudflare did not allow the Workers plan check. Automatic detection needs an API token with Billing Read (BOXOX_BILLING_TOKEN can supply a separate read-only token). Wrangler OAuth does not grant it. Check Workers & Pages in your dashboard, then set BOXOX_PLAN=free or BOXOX_PLAN=paid and rerun. No resources or subscriptions have been changed.');
+    // Cloudflare offers applications no billing permission, so the owner answers instead.
+    const answer = (await options.ask?.('Is this Cloudflare account on Workers Free or Workers Paid? Check Workers & Pages → Plans if unsure. Type free or paid: '))?.trim().toLowerCase();
+    if (answer === 'free' || answer === 'paid') return { plan: answer, source: 'installer choice' };
+    throw new Error('Cloudflare did not allow the Workers plan check. Check Workers & Pages in your dashboard, then set BOXOX_PLAN=free or BOXOX_PLAN=paid and rerun (a read-only Billing Read token in BOXOX_BILLING_TOKEN also works). No resources or subscriptions have been changed.');
   }
 }
 

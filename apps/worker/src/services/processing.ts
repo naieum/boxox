@@ -202,6 +202,10 @@ export async function updateProcessing(db: Db, env: Env, patch: ProcessingUpdate
   const budgetRequested = patch.dailyBudgetMicros !== undefined;
   const warnings: string[] = [];
   if (ai && provider && (newlyEnabled || budgetRequested)) {
+    if (newlyEnabled && !(env.CF_API_TOKEN && env.CF_ACCOUNT_ID)) {
+      // Privacy and spending limits go on the gateway before any mail reaches a model.
+      throw new ProcessingUpdateError(409, "ai_credential_required", "Turning AI on needs a Cloudflare API token limited to AI Gateway Edit, stored as the CF_API_TOKEN Worker secret, so Box Ox can apply privacy and spending limits first. See the processing guide.");
+    }
     if (newlyEnabled || (env.CF_API_TOKEN && env.CF_ACCOUNT_ID)) {
       const client = cloudflareClient(env, fetcher);
       if (newlyEnabled && provider !== "cloudflare") {
@@ -210,7 +214,7 @@ export async function updateProcessing(db: Db, env: Env, patch: ProcessingUpdate
       }
       await client.applyGatewaySettings(DEFAULT_GATEWAY_ID, { dailySpendLimitUsd: dailyBudgetMicros / 1_000_000 });
     } else {
-      warnings.push("The app uses your new daily budget. The AI Gateway backstop is unchanged because the setup token was removed; its existing limit may stop AI sooner or allow a higher backstop. Restore the token to sync that limit.");
+      warnings.push("The app uses your new daily budget. The AI Gateway backstop is unchanged because no Cloudflare API token is stored; its existing limit may stop AI sooner or allow a higher backstop. Store the AI Gateway token again to sync that limit.");
     }
   }
   const now = new Date();

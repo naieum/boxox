@@ -1,4 +1,4 @@
-import { Bell, Droplet, LogOut, ShieldCheck, User } from "lucide-react";
+import { Bell, Droplet, KeyRound, LogOut, ShieldCheck, User } from "lucide-react";
 import { useState } from "react";
 import { useMe } from "@/AppShell";
 import { initialsOf } from "@/components/brand";
@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
+import { api } from "@/lib/api";
 import { ProcessingSettingsTab } from "./ProcessingSettings";
+import { SignInSettingsTab } from "./SignInSettings";
 
 const TABS = [
   { id: "profile", label: "Profile", icon: User },
+  { id: "signin", label: "Sign-in", icon: KeyRound },
   { id: "processing", label: "Processing", icon: ShieldCheck },
   { id: "appearance", label: "Appearance", icon: Droplet },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -37,7 +40,7 @@ function ProfileTab() {
           {initialsOf(user.name || user.email)}
         </div>
         <div className="text-[12.5px] text-[#7c838f]">
-          Your identity comes from Cloudflare Access.
+          {me.data?.signin === "native" ? "You sign in to this Box Ox with a passkey." : "Your identity comes from Cloudflare Access."}
         </div>
       </div>
       <div className="space-y-[7px]">
@@ -119,14 +122,16 @@ function NotificationsTab() {
 
 export function SettingsPage() {
   const [tab, setTab] = useState<TabId>(initialTab);
-  const isOwner = useMe().data?.user.role === "owner";
+  const me = useMe();
+  const isOwner = me.data?.user.role === "owner";
+  const native = me.data?.signin === "native";
 
   return (
     <PageContainer width={1000}>
       <PageHeader title="Settings" description="Manage your profile and preferences." />
       <div className="flex flex-col gap-8 md:flex-row">
         <div className="flex flex-row gap-1 overflow-x-auto md:w-[190px] md:flex-none md:flex-col">
-          {TABS.filter((t) => t.id !== "processing" || isOwner).map((t) => (
+          {TABS.filter((t) => (t.id !== "processing" || isOwner) && (t.id !== "signin" || native)).map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
@@ -141,6 +146,7 @@ export function SettingsPage() {
         </div>
         <div className="min-w-0 max-w-[640px] flex-1">
           {tab === "profile" && <ProfileTab />}
+          {tab === "signin" && native && <SignInSettingsTab />}
           {tab === "processing" && (isOwner ? <ProcessingSettingsTab /> : <p>Only the owner can change mail processing.</p>)}
           {tab === "appearance" && <AppearanceTab />}
           {tab === "notifications" && <NotificationsTab />}
@@ -150,7 +156,8 @@ export function SettingsPage() {
         <Button
           variant="outline"
           onClick={() => {
-            window.location.href = "/cdn-cgi/access/logout";
+            if (native) void api.auth.logout().finally(() => window.location.replace("/signin"));
+            else window.location.href = "/cdn-cgi/access/logout";
           }}
           className="h-[38px] gap-[9px] rounded-[10px] border-white/12 bg-transparent px-4 text-[13px] font-medium text-[#C4CAD4]"
         >

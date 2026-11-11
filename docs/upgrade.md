@@ -28,15 +28,17 @@ This page covers installations made with the local installer and with the Deploy
    pnpm exec wrangler deployments list --name boxox
    ```
 
-6. Confirm Wrangler is signed in to the installation account with `pnpm exec wrangler whoami`.
-
 ## Run the upgrade
 
-Use the same values as the first deployment. `BOXOX_URL` is your mail hostname. `BOXOX_PLAN` is the profile you installed, `free` or `paid`; state it explicitly, because automatic detection needs a token with Billing Read, which Wrangler's OAuth sign-in does not grant.
+From 2.5.0 the installer reads the owner, address and profile from the installed Worker:
 
 ```sh
-CF_ACCOUNT_ID=<account id> OWNER_EMAIL=<owner email> BOXOX_URL=https://mail.example.com BOXOX_PLAN=paid pnpm run deploy
+pnpm run deploy
 ```
+
+If this computer is not signed in to Cloudflare, the installer opens Cloudflare's page to allow Wrangler first.
+If your sign-in can reach more than one account, it lists them; set `CF_ACCOUNT_ID` to the installation account and
+run it again. Upgrading **to** 2.5.0 from an older release works the same way, because it is the new installer that runs.
 
 On an existing installation the installer:
 
@@ -45,6 +47,7 @@ On an existing installation the installer:
 - applies pending D1 migrations to the remote database before uploading code;
 - uploads the Worker with `--keep-vars`, so variables set in the dashboard survive, and sets `BUILD_SHA` to the deployed commit;
 - adds secrets that are missing and never rotates ones that exist;
+- keeps Cloudflare Access as your sign-in if the Worker has its Access values, and prints no owner link in that case;
 - waits up to a minute for `/health` to report the deployed commit, and fails if it does not.
 
 Cloudflare Access, DNS, Email Routing, the sending subdomain, event subscriptions and stored mail are not touched.
@@ -70,6 +73,15 @@ Code rolls back; the database does not.
 - **Mail:** stored mail in R2 is never changed by an upgrade or a rollback.
 
 ## Version notes
+
+### From 2.4.11 to 2.5.0
+
+- The installer needs no settings repeated: run `pnpm run deploy`. It applies migration `0010_owner_signin`.
+- **Your sign-in does not change.** An installation with Cloudflare Access keeps it; no owner link is printed.
+- A new rate-limit binding, `SIGNIN_RATE_LIMIT`, is declared in `wrangler.jsonc`. It is only used by passkey sign-in.
+- Connect further mail domains with `pnpm run domain example.com`. An existing in-app Cloudflare connection keeps working.
+- Enabling AI or changing providers now reports clearly when no AI Gateway token is stored; see the processing guide.
+- To move from Cloudflare Access to passkey sign-in, delete the `ACCESS_AUD` and `TEAM_DOMAIN` Worker secrets, run `pnpm run owner-link`, and remove the Access applications in Zero Trust. Until you open the link, nobody can sign in.
 
 ### From 2.4.10 to 2.4.11
 

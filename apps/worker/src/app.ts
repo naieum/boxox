@@ -14,7 +14,7 @@ import { mcpClientRoutes } from "./oauth/clients";
 import { consentRoutes } from "./oauth/consent";
 import { withOAuth } from "./oauth/provider";
 import {
-  requireAccess,
+  requireIdentity,
   requireSameOrigin,
   requireSession,
   requireOwner,
@@ -43,11 +43,13 @@ import { threadRoutes } from "./routes/threads";
 import { capabilities, isFree } from "./services/capabilities";
 import { publicDomainHealthRoutes } from "./routes/health";
 import { completeCloudflareOAuth } from "./services/cloudflare-oauth";
+import { signinRoutes } from "./routes/signin";
+import { signinMode } from "./services/signin";
 
 
 const app = new Hono<AppContext>()
   .use("*", securityHeaders)
-  .use("*", requireAccess)
+  .use("*", requireIdentity)
   .use("*", requireSameOrigin)
   .use("*", async (c, next) => {
     if (isFree(c.env)) {
@@ -99,8 +101,11 @@ const app = new Hono<AppContext>()
   // Large-file download links (no auth; the token is the credential).
   .route("/f", shareLinkPublicRoutes)
 
+  // Box Ox sign-in (passkeys); inert when Cloudflare Access is configured.
+  .route("/api/auth", signinRoutes)
+
   // Authenticated org-scoped API
-  .get("/api/me", requireSession, (c) => c.json({ user: c.get("user"), capabilities: capabilities(c.env) }))
+  .get("/api/me", requireSession, (c) => c.json({ user: c.get("user"), capabilities: capabilities(c.env), signin: signinMode(c.env) }))
   .get("/api/cloudflare/callback", requireSession, requireOwner, (c) => completeCloudflareOAuth(c))
 
   // Signed links and remote images from mail shown in the message frame.

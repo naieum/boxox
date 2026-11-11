@@ -25,6 +25,7 @@ globalThis.fetch = async (url, options) => {
   appendFileSync(${JSON.stringify(log)}, JSON.stringify({url, method:options.method}) + '\\n');
   let result;
   if (url.endsWith('/workers/scripts/boxox/settings')) return new Response(JSON.stringify({success:false}), {status:404});
+  else if (url.endsWith('/client/v4/user')) return new Response(JSON.stringify({success:false,errors:[{code:9109}]}), {status:403});
   else if (url.endsWith('/r2/buckets?per_page=1')) result = {buckets:[]};
   else if (url.endsWith('/workers/subdomain')) result = {subdomain:'offline-boxox-test'};
   else if (url.endsWith('/r2/buckets/boxox-mail')) result = {};
@@ -59,6 +60,7 @@ test('hosted form values reach the generated config and selected D1/KV ids are p
   assert.equal(generated.kv_namespaces[0].id, '00000000000000000000000000000001');
   assert.ok(requests.length > 0);
   assert.ok(requests.every(({ url }) => url.includes('/accounts/00000000000000000000000000000002/')));
+  assert.ok(!requests.some(({ url }) => url.includes('/oauth_clients')), 'No OAuth client is registered unasked');
   assert.ok(!requests.some(({ url }) => /\/d1\/|\/storage\/kv\/|\/subscriptions/.test(url)), 'Existing ids and explicit Paid plan avoid resource creation and billing lookup');
 });
 
@@ -71,11 +73,11 @@ test('build environment overrides form values', () => {
   assert.equal(generated.vars.OWNER_EMAIL, 'build@example.com');
 });
 
-test('missing form owner stops before any Cloudflare request', () => {
+test('a missing form owner that the build token cannot look up stops before any change', () => {
   const { execution, requests } = prepare({ CF_ACCOUNT_ID: '00000000000000000000000000000002', OWNER_EMAIL: '' });
   assert.equal(execution.status, 1);
   assert.match(execution.stderr, /Set OWNER_EMAIL/);
-  assert.deepEqual(requests, []);
+  assert.ok(requests.every(({ method }) => method === 'GET'), 'Only read requests are made before the owner is known');
 });
 
 test('Free template installs without a billing lookup or paid resources', () => {
@@ -91,5 +93,5 @@ test('a Free template cannot silently claim a Paid upgrade with missing bindings
   const { execution, requests } = prepare({ CF_ACCOUNT_ID: '00000000000000000000000000000002', OWNER_EMAIL: 'owner@example.com', BOXOX_EDITION: 'free' });
   assert.equal(execution.status, 1);
   assert.match(execution.stderr, /review wrangler.paid.jsonc/);
-  assert.deepEqual(requests, []);
+  assert.ok(requests.every(({ method }) => method === 'GET'), 'Only read requests are made before the profile is settled');
 });

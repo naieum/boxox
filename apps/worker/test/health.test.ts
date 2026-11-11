@@ -43,15 +43,21 @@ describe("deployment health", () => {
     await waitOnExecutionContext(ctx);
   });
 
-  it("keeps the application closed until Access is configured", async () => {
+  it("without Access, stays closed to anyone without a Box Ox session", async () => {
+    const bindings = { ...env, ACCESS_AUD: undefined, TEAM_DOMAIN: undefined, OWNER_EMAIL: "owner@example.test" };
+    for (const [method, path] of [["GET", "/api/me"], ["GET", "/api/settings/processing"], ["GET", "/api/orgs/default/threads"], ["GET", "/api/auth/passkeys"], ["GET", "/api/auth/members"], ["POST", "/api/setup/complete"], ["POST", "/oauth/authorize"], ["DELETE", "/anything"]] as const) {
+      const ctx = createExecutionContext();
+      const response = await worker.fetch(new Request(`https://mail.test${path}`, { method, headers: { origin: "https://mail.test", "x-boxox-csrf": "1" } }), bindings, ctx);
+      expect(response.status, `${method} ${path}`).toBe(401);
+      expect(await response.json()).toMatchObject({ error: { code: "unauthorized" } });
+      await waitOnExecutionContext(ctx);
+    }
     const ctx = createExecutionContext();
-    const response = await worker.fetch(new Request("https://mail.test/"), {
-      ...env,
-      ACCESS_AUD: undefined,
-      TEAM_DOMAIN: undefined,
-    }, ctx);
-    expect(response.status).toBe(503);
-    expect(await response.json()).toMatchObject({ error: { code: "access_not_configured" } });
+    const consent = await worker.fetch(new Request("https://mail.test/oauth/authorize?client_id=x"), bindings, ctx);
+    expect(consent.status).toBe(302);
+    expect(consent.headers.get("location")).toBe("/signin?next=%2Foauth%2Fauthorize%3Fclient_id%3Dx");
+    const state = await worker.fetch(new Request("https://mail.test/api/auth/state"), bindings, ctx);
+    expect(await state.json()).toEqual({ mode: "native", user: null, ownerReady: false });
     await waitOnExecutionContext(ctx);
   });
 });

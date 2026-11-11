@@ -28,8 +28,8 @@ describe("Free deployment with paid bindings absent", () => {
     expect(health.status).toBe(200);
     expect(await health.json()).toMatchObject({ ok: true });
     const protectedPage = await SELF.fetch("https://box.test/api/me");
-    expect(protectedPage.status).toBe(503);
-    expect(await protectedPage.json()).toMatchObject({ error: { code: "access_not_configured" } });
+    expect(protectedPage.status).toBe(401);
+    expect(await protectedPage.json()).toMatchObject({ error: { code: "unauthorized" } });
   });
 
   it("parses, stores, scans, indexes, and notifies through real Workflow and Durable Object bindings", async () => {
@@ -90,7 +90,8 @@ describe("Free deployment with paid bindings absent", () => {
   it("does not expose internal runtime RPC methods as public HTTP routes", async () => {
     for (const path of ["/receive", "/parse", "/scheduled", "/deliverWebhook"]) {
       const response = await SELF.fetch(`https://box.test${path}`, { method: "POST", body: "{}" });
-      expect(response.status).toBe(503);
+      // Signed out, nothing but the web app's own files and the machine endpoints is answered.
+      expect(response.status).toBe(401);
     }
   });
 

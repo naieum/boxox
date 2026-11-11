@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@boxox/shared": "workspace:*",
+    "@simplewebauthn/browser": "^13.3.0",
     "@tanstack/react-query": "^5.80.0",
     "@tanstack/react-router": "^1.120.0",
     "class-variance-authority": "^0.7.1",

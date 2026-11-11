@@ -12,7 +12,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 
 [![A threaded conversation in the Box Ox mail client](https://boxox.dev/screenshots/02-thread-1440.webp)](https://boxox.dev/screenshots/)
 
-**Current release: 2.4.11** — catches phishing that poses as your mail system, scores recent inbox mail again after the upgrade, and makes Quarantine a folder you can open. See the [2.4.11](docs/release-2.4.11.md) and [2.4.10](docs/release-2.4.10.md) release notes. CLI 0.3.0 and email skill 0.5.0 are described in the [tools release notes](docs/tools-0.3.0.md).
+**Current release: 2.5.0** — installs without API tokens or Cloudflare Access setup: you sign in with a passkey and connect a mail domain with one command. See the [2.5.0 release notes](docs/release-2.5.0.md).
 
 ## Deploy with the Cloudflare button
 
@@ -31,24 +31,24 @@ Requirements:
 
 - Node.js 22.23.4, 24.22.1, or 26.12.1 or newer on those lines. Odd-numbered lines such as 25 are unsupported. `pnpm install` stops on an unpatched version.
 - pnpm 10.25.0, Git, and Bash (use WSL on Windows).
-- A Cloudflare account with R2 activated and Cloudflare Access. Workers Free runs the inbox profile; Workers Paid runs the full profile.
+- A Cloudflare account with R2 activated. Workers Free runs the inbox profile; Workers Paid runs the full profile.
 - A domain on Cloudflare DNS for mail. The app can run on workers.dev before you connect one.
 - Require two-factor sign-in on Cloudflare and GitHub. Use security keys where possible.
 
 Follow the [setup guide](docs/setup.md) for the full procedure:
 
 1. Clone this repository, or download and review a source release from [boxox.dev/downloads](https://boxox.dev/downloads/) and verify its checksum. If you use a ZIP, initialize and commit a local Git repository as the setup guide describes.
-2. Run `pnpm install --frozen-lockfile` and `pnpm exec wrangler login`.
-3. Set `CF_ACCOUNT_ID` and `OWNER_EMAIL`. Leave `BOXOX_URL` unset for the workers.dev address, or set it to your custom HTTPS origin.
-4. Run `pnpm run deploy` from a clean checkout. (`pnpm deploy` is a different pnpm command.)
-5. Configure Cloudflare Access and its public-path exceptions.
-6. Set the setup token, open `/setup`, and review every DNS and processing choice. See the [token template and permission checklist](docs/setup.md#create-the-setup-token).
-7. Test sending, receiving, delivery events, and grants. A successful `/health` response does not prove mail delivery.
-8. Remove `CF_API_TOKEN` after setup.
+2. Run `pnpm install --frozen-lockfile`.
+3. Run `pnpm run deploy` from a clean checkout. (`pnpm deploy` is a different pnpm command.) If asked, allow Wrangler, Cloudflare's own deployment tool, in the browser. Leave `BOXOX_URL` unset for the workers.dev address, or set it to your custom HTTPS origin.
+4. Open the owner link the installer prints and create your passkey.
+5. Run `pnpm run domain example.com` to connect your mail domain.
+6. Finish `/setup`, then test sending, receiving, delivery events, and grants. A successful `/health` response does not prove mail delivery.
 
-**Receiving moves the domain's mail to Box Ox.** Enabling Email Routing can replace existing MX records. The setup wizard shows them and asks before replacing another mail provider.
+There are no API tokens to create or paste, and Cloudflare Access is optional. Box Ox registers no application with Cloudflare and contacts no service run by its publisher: everything runs in your account.
 
-To update, follow the [upgrade guide](docs/upgrade.md): rerun the installer from the newer source with the same settings.
+**Receiving moves the domain's mail to Box Ox.** If the domain already has another provider's mail records, `pnpm run domain` lists them and stops; you remove them in Cloudflare DNS yourself and run it again.
+
+To update, follow the [upgrade guide](docs/upgrade.md): rerun the installer from the newer source.
 To remove an installation, follow the [uninstall guide](docs/uninstall.md).
 
 Prefer reviewed signed release tags over `main` when they are available. Current releases are unsigned: published SHA-256 checksums confirm the download is unchanged, not who published it. Review changes before deploying them.

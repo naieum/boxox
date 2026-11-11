@@ -1,16 +1,17 @@
 # Connect with Cloudflare
 
-Box Ox can connect to Cloudflare without asking the owner to copy an API token.
-The owner approves access in Cloudflare. Box Ox encrypts the credentials in its D1 database and renews access automatically.
+**This is optional.** A normal installation connects mail domains from the installer's computer with
+`pnpm run domain example.com`, and the app holds no Cloudflare credential at all.
+See [Connect a mail domain](https://boxox.dev/docs/connect-domain/).
 
-## Installation
+Use this page only if you want to add domains from inside the app instead. That needs an OAuth client registered in
+your own Cloudflare account, so the app can ask you for access on Cloudflare's page. Box Ox ships no shared client:
+nothing about your installation depends on its publisher.
 
-The installer creates a private OAuth client when its deployment credential has **OAuth Client Write**.
-The client belongs to the installation's Cloudflare account.
-It uses Authorization Code with PKCE and one exact callback URL.
-No client secret or Wrangler login credential is stored in the Worker.
+## Register your client
 
-If the deployment login lacks that permission, create the client once in **Cloudflare → Manage account → OAuth clients**:
+Create it once in **Cloudflare → Manage account → OAuth clients**. Cloudflare's sign-in for tools cannot create OAuth
+clients, so this step is done in the dashboard.
 
 | Setting | Value |
 | --- | --- |
@@ -19,6 +20,9 @@ If the deployment login lacks that permission, create the client once in **Cloud
 | Token authentication | None (PKCE) |
 | Redirect URL | `https://YOUR-INSTALLATION/api/cloudflare/callback` |
 | Visibility | Private |
+
+Then deploy with `CF_OAUTH_CLIENT_ID` set to its client ID. The ID is public configuration, not a credential,
+and later deployments keep it. No client secret or Wrangler login credential is stored in the Worker.
 
 Select these scopes:
 
@@ -35,24 +39,12 @@ addressing. Cloudflare requires `zone-settings.write` for those operations.
 See [enable routing](https://developers.cloudflare.com/api/resources/email_routing/subresources/dns/methods/create/)
 and [update routing settings](https://developers.cloudflare.com/api/resources/email_routing/methods/edit/).
 
-### Upgrade an existing connection
+### Change an existing client
 
-Rerun the installer. It checks the configured OAuth client and adds missing client
-scopes when the deployment credential has OAuth Client Write. If it reports a
-permission error, edit the existing client in Cloudflare and add **Zone Settings
-Write** (`zone-settings.write`); retain its client ID, callback, and other scopes.
-Then deploy the updated Worker and reconnect through **Domains → Add domain →
-Connect with Cloudflare**. Updating the client or Worker does not expand an
-existing owner's grant: the owner must approve the new scope in Cloudflare.
+If the app reports a missing permission, edit the client in Cloudflare and add it; keep its client ID, callback and
+other scopes. Then reconnect through **Domains → Add domain → Connect with Cloudflare**. Changing the client does not
+expand an existing grant: the owner must approve the new scope in Cloudflare.
 API-token connections need **Zone Settings Edit** on the mail zones as well.
-
-Deploy with `CF_OAUTH_CLIENT_ID` set to the resulting client ID.
-The client ID is public configuration, not a credential.
-Existing Worker configuration is preserved on later deployments.
-
-A normal Wrangler login cannot register this client unless Cloudflare grants it OAuth Client Write.
-The installer reports that limitation instead of copying Wrangler's broad, expiring credentials into the app.
-An installation agent can prepare the client; the account owner must approve the access Cloudflare requests.
 
 ## Add a domain
 
@@ -83,7 +75,7 @@ Revoked refresh tokens fail closed and require another Cloudflare approval.
 
 A scoped API token remains available under **Advanced**.
 That fallback expires from the browser after fifteen minutes.
-Initial setup's optional AI Gateway configuration still uses its existing setup credential; this domain connection does not grant AI Gateway administration.
+This connection does not grant AI Gateway administration; see the [processing guide](https://boxox.dev/docs/processing/) for enabling AI.
 
 ## References
 

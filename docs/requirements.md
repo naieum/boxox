@@ -59,8 +59,9 @@ The app and remote MCP run on your Worker. The CLI runs on your computer or CI. 
 
 ## Provisioned resources
 
-The deployment helper selects the profile before provisioning. Automatic selection needs Billing Read.
-If Wrangler OAuth cannot read the plan, check the dashboard and set `BOXOX_PLAN=free` or `BOXOX_PLAN=paid`.
+The deployment helper selects the profile before provisioning. Cloudflare's sign-in for tools cannot read billing,
+so on a first install it asks whether the account is on Workers Free or Workers Paid; set `BOXOX_PLAN=free` or
+`BOXOX_PLAN=paid` to answer in advance. Later runs read the installed profile.
 It creates or reuses these shared resources:
 
 - A Worker and D1 database.
@@ -77,10 +78,11 @@ Review pricing for [R2](https://developers.cloudflare.com/r2/pricing/), [D1](htt
 
 ## Credentials and agents
 
-Domain onboarding can use **Connect with Cloudflare** after the installation has its own OAuth client.
-Creating that client requires OAuth Client Write or separate owner setup.
-If the client is unavailable, use the temporary API-token fallback. Scope the token to the chosen account, zones, and setup operations.
-Remove the token after onboarding. Normal mail transport continues through service bindings.
+Installing needs no API tokens. The installer signs in through Wrangler, Cloudflare's own deployment tool, and
+`pnpm run domain` connects mail domains with the same sign-in. The running app holds no Cloudflare credential.
+People sign in to the app with passkeys; Cloudflare Access is optional.
+Enabling AI is the one optional feature that needs a scoped API token you create; see the processing guide.
+Normal mail transport runs through service bindings.
 
 Keep deployment credentials separate from mail API keys and agent grants. After deployment, approve the agent’s OAuth/mailbox grants or create a credential for its task. Copying the installation link grants no access.
 

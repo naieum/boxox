@@ -19,6 +19,7 @@ import { DomainsPage } from "./pages/Domains";
 import { MailPage } from "./pages/Mail";
 import { SettingsPage } from "./pages/Settings";
 import { SetupPage } from "./pages/Setup";
+import { SignInPage, WelcomePage } from "./pages/SignIn";
 import type { ComposeMode } from "./lib/api";
 import "./styles.css";
 
@@ -63,7 +64,13 @@ const devWebhooksRoute = createRoute({ getParentRoute: () => shellRoute, path: "
 const settingsRoute = createRoute({ getParentRoute: () => shellRoute, path: "/settings", component: SettingsPage });
 const setupRoute = createRoute({ getParentRoute: () => shellRoute, path: "/setup", component: SetupPage });
 
+// Outside the shell: these are the only pages a signed-out browser can use.
+const signInRoute = createRoute({ getParentRoute: () => rootRoute, path: "/signin", component: SignInPage });
+const welcomeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/welcome", component: WelcomePage });
+
 const routeTree = rootRoute.addChildren([
+  signInRoute,
+  welcomeRoute,
   shellRoute.addChildren([
     inboxRoute,
     folderRoute,

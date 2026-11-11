@@ -141,7 +141,7 @@ export function createSetupRoutes(opts: { fetch?: typeof fetch } = {}) {
         if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
           return c.json({
             configured: false,
-            message: "Set CF_API_TOKEN and CF_ACCOUNT_ID as Worker secrets (wrangler secret put), then reload.",
+            message: "Connect mail domains with \"pnpm run domain example.com\" where you installed Box Ox. An API token here is optional.",
           });
         }
         let token: { status: string; expires_on?: string };
@@ -278,7 +278,7 @@ export function createSetupRoutes(opts: { fetch?: typeof fetch } = {}) {
         return c.json({
           completed: true,
           completedAt: now.toISOString(),
-          advice: "You can now remove the Cloudflare API token: wrangler secret delete CF_API_TOKEN. The app works without it; add it again to onboard more domains.",
+          advice: c.env.CF_API_TOKEN ? "You can now remove the Cloudflare API token: wrangler secret delete CF_API_TOKEN. The app works without it." : "",
         });
       })
   );

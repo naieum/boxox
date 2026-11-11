@@ -13,16 +13,18 @@ Changes apply to new requests. An AI request already running may finish.
 | Address exceptions | Skips AI classification, indexing, and assist for that address | Immediately |
 | Rules, daily budget, uncertainty preference | Controls AI classification and spending | **Save rules and budget** |
 
-You can turn AI off without a Cloudflare setup token or saving other form edits.
+You can turn AI off without any Cloudflare credential or saving other form edits.
 Turning it off makes no provider calls or gateway changes.
 
 ## Enable AI or change providers
 
-Enabling AI or changing an enabled provider requires `CF_API_TOKEN` and `CF_ACCOUNT_ID`.
+This is the one optional feature that needs a credential you create. Box Ox applies privacy and spending settings
+to your AI Gateway before any mail reaches a model, and Cloudflare's sign-in for tools cannot change AI Gateway.
 
-1. Restore the scoped setup token if you removed it.
-2. Choose the provider and review its data disclosure.
-3. Save the choice, then remove the setup token after configuration.
+1. In Cloudflare, create an API token limited to **AI Gateway Edit** on your account, with a short expiry.
+2. Store it: `pnpm exec wrangler secret put CF_API_TOKEN --config .wrangler/deploy/wrangler.json`
+3. In **Settings → Processing**, choose the provider, review its data disclosure, and save.
+4. Remove it: `pnpm exec wrangler secret delete CF_API_TOKEN --config .wrangler/deploy/wrangler.json`
 
 Before saving consent, Box Ox verifies third-party credits and applies these AI Gateway settings:
 
@@ -44,14 +46,14 @@ Use **Save rules and budget** after changing rules, the budget, or the uncertain
 
 **The app counter is not a strict billing ceiling.** Concurrent calls can pass its budget check together.
 
-Without the setup token, a same-provider budget change updates the app limit but retains the previous gateway backstop.
+Without that token, a same-provider budget change updates the app limit but retains the previous gateway backstop.
 An old lower gateway limit can stop calls early. An old higher limit remains a looser backstop.
 Box Ox returns a warning when these limits differ.
 
-To synchronize the gateway limit, restore the setup token and save the budget again.
+To synchronize the gateway limit, store the token again and save the budget again.
 Remove the token afterward.
 
-## Work without the setup token
+## Work without the token
 
 You can still turn processing groups off, change local/reputation choices, edit rules, and change the app budget.
 You can also set address exceptions. Enabling AI or changing an enabled provider requires the token.

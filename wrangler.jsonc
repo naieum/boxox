@@ -120,6 +120,12 @@
       "name": "AGENT_RATE_LIMIT",
       "namespace_id": "1002",
       "simple": { "limit": 10, "period": 60 }
+    },
+    {
+      // Box Ox sign-in and invite links, per IP.
+      "name": "SIGNIN_RATE_LIMIT",
+      "namespace_id": "1004",
+      "simple": { "limit": 30, "period": 60 }
     }
   ],
   "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "boxox" }],

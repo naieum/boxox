@@ -22,7 +22,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { initialsOf, OxMark, Wordmark } from "@/components/brand";
-import { api } from "@/lib/api";
+import { api, ApiRequestError } from "@/lib/api";
 import { useRealtime } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -419,5 +419,19 @@ export function useActiveOrgId(): string {
 }
 
 export function useMe() {
-  return useQuery({ queryKey: ["me"], queryFn: () => api.me(), retry: false });
+  return useQuery({
+    queryKey: ["me"],
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await api.me();
+      } catch (error) {
+        // Box Ox sign-in: no session yet. (Cloudflare Access never lets this page load signed out.)
+        if (error instanceof ApiRequestError && error.status === 401 && error.code === "unauthorized") {
+          window.location.replace(`/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        }
+        throw error;
+      }
+    },
+  });
 }
