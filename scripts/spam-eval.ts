@@ -144,9 +144,9 @@ export async function prepare(item: CorpusItem, folds: number): Promise<Prepared
   const delivered = header(mail, "delivered-to") ?? header(mail, "to");
   const ownerDomain = domainOf(delivered);
   const ownerDomains = ownerDomain ? [ownerDomain] : [];
-  const local = localSignals(mail, { ownerDomains, now });
-  const signals = local.signals.filter((s) => s.id !== "auth_untrusted");
   const to = (email.to ?? []).flatMap((a) => (a.group ? a.group : [a])).map((a) => (a.address ?? "").toLowerCase()).filter(Boolean);
+  const local = localSignals(mail, { ownerDomains, now, recipients: to });
+  const signals = local.signals.filter((s) => s.id !== "auth_untrusted");
   return {
     item,
     fold: hash(item.id) % folds,

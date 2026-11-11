@@ -71,6 +71,13 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.4.9 to 2.4.10
+
+- New local rules catch phishing that poses as your mail system. They need **Local filters** on; review **Settings → Processing** if you left them off.
+- After the upgrade, Box Ox scores the last 30 days of inbox mail again, hourly in small batches, and moves phishing it finds to Spam or Quarantine. No AI model is called. Mail you marked **Not spam** is left alone.
+- Check Spam and Quarantine the day after upgrading, and mark anything that was moved wrongly as **Not spam**.
+- No database migration, new secret, or reconnection is required.
+
 ### From 2.4.8 to 2.4.9
 
 - Use Node.js 22.23.4, 24.22.1, 26.12.1, or a newer release on those lines. `pnpm install` now stops with `ERR_PNPM_UNSUPPORTED_ENGINE` on an unpatched Node.js.

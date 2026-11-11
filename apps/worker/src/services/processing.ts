@@ -75,6 +75,7 @@ export function consentScreen() {
         includes: [
           "Sender authentication checks (SPF, DKIM, DMARC, ARC)",
           "Header and structure rules",
+          "Phishing rules for fake mailbox password, storage and held-mail notices",
           "Your blocklist",
           "A Bayes filter trained on your spam / not-spam clicks",
           "Campaign fingerprints of mail you marked as spam",

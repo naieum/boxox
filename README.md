@@ -12,7 +12,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 
 [![A threaded conversation in the Box Ox mail client](https://boxox.dev/screenshots/02-thread-1440.webp)](https://boxox.dev/screenshots/)
 
-**Current release: 2.4.9** — a security release that requires a patched Node.js and clears high-severity zod, undici, and body-parser advisories. See the [release notes](docs/release-2.4.9.md). CLI 0.3.0 and email skill 0.5.0 are described in the [tools release notes](docs/tools-0.3.0.md).
+**Current release: 2.4.10** — catches phishing that poses as your mail system from an authenticated sender, and scores recent inbox mail again after the upgrade. See the [release notes](docs/release-2.4.10.md). CLI 0.3.0 and email skill 0.5.0 are described in the [tools release notes](docs/tools-0.3.0.md).
 
 ## Deploy with the Cloudflare button
 

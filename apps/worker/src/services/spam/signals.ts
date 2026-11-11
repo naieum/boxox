@@ -37,6 +37,8 @@ export interface SignalContext {
   ownerDomains: string[];
   /** Addresses the owner has written to. */
   knownContacts?: string[];
+  /** Addresses this message was delivered to, for links and lures that name the recipient. */
+  recipients?: string[];
   now?: Date;
 }
 
@@ -80,6 +82,7 @@ const DOCUMENT_EXTENSIONS = new Set(["pdf", "doc", "docx", "xls", "xlsx", "ppt",
 const SECOND_LEVEL = new Set(["co", "com", "net", "org", "gov", "edu", "ac", "ne", "or", "go", "gob", "mil"]);
 
 const MAX_LINKS = 200;
+const MAX_MISMATCHES = 2;
 const HOUR = 3600_000;
 
 /** "Mail.Example.co.uk." → "example.co.uk": the last two labels, or three under a common second level. */
@@ -311,7 +314,8 @@ export function linkSignals(links: Link[], ownerDomains: string[]): Signal[] {
   for (const link of links) {
     if (link.text) {
       const shown = textDomain(link.text);
-      if (shown && !isIp(shown) && !sameOrg(shown, link.host)) {
+      // Newsletters route every link through one click tracker; past two, more mismatches add nothing.
+      if (shown && !isIp(shown) && !sameOrg(shown, link.host) && out.filter((s) => s.id === "link_text_mismatch").length < MAX_MISMATCHES) {
         once({ id: "link_text_mismatch", weight: 3, detail: `${registrableDomain(shown)} -> ${link.host}` });
       }
     }
@@ -439,6 +443,121 @@ function structureSignals(mail: SignalMail, ctx: SignalContext): Signal[] {
   return out;
 }
 
+// --- Mailbox credential lures ---
+
+/** Object storage and static hosting where anyone can publish a page under a reputable domain. */
+const STORAGE_HOSTS = [
+  "amazonaws.com", "wasabisys.com", "storage.googleapis.com", "firebasestorage.googleapis.com", "blob.core.windows.net",
+  "web.core.windows.net", "digitaloceanspaces.com", "backblazeb2.com", "linodeobjects.com", "r2.dev", "r2.cloudflarestorage.com",
+];
+
+const MAILBOX = "(?:e-?mail|mail ?box|webmail|mail server|mail account)";
+/** Notices about the mailbox itself: its password, its quota, its suspension, or mail held back from it. */
+const MAILBOX_LURES = [
+  new RegExp(`\\b${MAILBOX}\\b[\\s\\S]{0,80}\\bpassword\\b[\\s\\S]{0,80}\\b(?:expir|reset|confirm|verif|validat|updat|renew)`),
+  new RegExp(`\\bpassword\\b[\\s\\S]{0,40}\\b(?:of|for|to) (?:your|the|this) ${MAILBOX}\\b`),
+  new RegExp(`\\b(?:mail ?box|webmail|e-?mail account|mail account)\\b[\\s\\S]{0,80}\\b(?:suspen|deactivat|terminat|shut ?down|disabl|quota|storage (?:is )?(?:full|limit)|almost full|exceeded)`),
+  /\b(?:pending|undelivered|incoming|held) (?:e-?mails?|messages?)\b[\s\S]{0,80}\b(?:releas|quarantin|retriev|mail server)/,
+];
+
+/** Display names that pose as the mail system or its staff rather than naming a person or company. */
+const ROLE_NAME = /^(?:e-?mail|mail|webmail|mail ?box|it|system|server|domain)\s+(?:admin(?:istrator)?|support|help ?desk|team|security|service|notifications?)$|\b(?:webmail|roundcube|cpanel|e-?mail server|mail server|mail ?box|e-?mail admin(?:istrator)?|server admin(?:istrator)?|help ?desk)\b/;
+
+/** Soft hyphens, zero-width and directional marks, variation selectors and tag characters. */
+const INVISIBLE = /[\u00ad\u034f\u061c\u180e\u200b-\u200f\u2060-\u2064\ufe00-\ufe0f\ufeff]|\udb40[\udc00-\uddef]/g;
+const LATIN = /[a-z]/i;
+const GREEK_CYRILLIC = /[\u0370-\u03ff\u0400-\u052f]/;
+
+/** Hidden characters, or one word mixing Latin with Greek or Cyrillic letters: text built to dodge matching. */
+function isObfuscated(text: string): boolean {
+  if ((text.match(INVISIBLE) ?? []).length >= 2) return true;
+  return text.split(/[^\p{L}]+/u).some((w) => w.length >= 4 && LATIN.test(w) && GREEK_CYRILLIC.test(w));
+}
+
+const MAX_LURE_TEXT = 20_000;
+const MAX_LURE_LINKS = 50;
+
+/** Subject and visible body, lowercased with whitespace collapsed. */
+function lureText(mail: SignalMail): string {
+  const body = (mail.text ?? "").trim()
+    ? mail.text!
+    : decodeEntities((mail.html ?? "").replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]*>/g, " "));
+  return `${header(mail, "subject") ?? ""} ${body}`.slice(0, MAX_LURE_TEXT).toLowerCase().replace(/[\s\u00a0]+/g, " ");
+}
+
+function base64Decode(token: string): string | null {
+  try {
+    return atob(token.replaceAll("-", "+").replaceAll("_", "/").replace(/=+$/, "")).toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/** Where a link carries a recipient's address: the fragment (plain or base64), or base64 anywhere else. */
+function recipientInLink(href: string, recipients: string[]): "fragment" | "base64" | null {
+  const hash = href.indexOf("#");
+  const fragment = hash < 0 ? "" : href.slice(hash + 1);
+  let plain = fragment.toLowerCase();
+  try {
+    plain = decodeURIComponent(fragment).toLowerCase();
+  } catch {
+    // Keep the raw fragment.
+  }
+  if (recipients.some((r) => plain.includes(r))) return "fragment";
+  const tokens = (href.match(/[A-Za-z0-9+_=-]{12,400}/g) ?? []).slice(0, 20);
+  for (const token of tokens) {
+    const decoded = base64Decode(token);
+    if (decoded && recipients.some((r) => decoded.includes(r))) return hash >= 0 && href.indexOf(token) > hash ? "fragment" : "base64";
+  }
+  return null;
+}
+
+/**
+ * Credential phishing aimed at the mailbox itself: mail from outside that
+ * poses as the mail system ("your email password will expire"), names the
+ * recipient, or links to a page that already knows who they are. This
+ * install has no mailbox password, so nothing legitimate sends these.
+ */
+function lureSignals(mail: SignalMail, ctx: SignalContext, links: Link[]): Signal[] {
+  const fromDomain = domainOf(mail.fromEmail);
+  if (ctx.ownerDomains.some((d) => sameOrg(d, fromDomain))) return [];
+  const out: Signal[] = [];
+  const recipients = [...new Set((ctx.recipients ?? []).map((r) => r.toLowerCase()).filter((r) => r.includes("@")))];
+
+  const name = (mail.fromName ?? "").normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+  if (ROLE_NAME.test(name)) out.push({ id: "display_name_role", weight: 1.5, detail: fromDomain });
+
+  const subject = header(mail, "subject") ?? "";
+  if (isObfuscated(`${subject} ${mail.fromName ?? ""}`)) out.push({ id: "obfuscated_sender_text", weight: 3 });
+  if (recipients.some((r) => subject.toLowerCase().includes(r))) out.push({ id: "subject_names_recipient", weight: 1.5 });
+
+  const text = lureText(mail);
+  const lure = (links.length > 0 || mail.attachments.length > 0) && MAILBOX_LURES.some((re) => re.test(text));
+  if (lure) {
+    out.push({ id: "mailbox_credential_lure", weight: 3 });
+    const owner = ctx.ownerDomains.map(registrableDomain).find((d) => text.includes(d));
+    if (recipients.some((r) => text.includes(r)) || owner) out.push({ id: "lure_names_recipient", weight: 2.5, detail: owner });
+  }
+
+  for (const link of links.slice(0, MAX_LURE_LINKS)) {
+    const where = recipients.length ? recipientInLink(link.href, recipients) : null;
+    if (where) {
+      out.push({ id: "recipient_in_link", weight: where === "fragment" ? 2.5 : 1.5, detail: `${link.host} (${where})` });
+      break;
+    }
+  }
+  const hosted = links.find((l) => {
+    if (!STORAGE_HOSTS.some((h) => l.host === h || l.host.endsWith(`.${h}`))) return false;
+    try {
+      return /\.html?$/i.test(new URL(l.href).pathname);
+    } catch {
+      return false;
+    }
+  });
+  if (hosted) out.push({ id: "storage_hosted_page", weight: 1.5, detail: hosted.host });
+  return out;
+}
+
 /** Owner domains or contacts used as the From address without passing authentication. */
 function ownerSpoofSignals(mail: SignalMail, ctx: SignalContext, auth: AuthSummary): Signal[] {
   const fromDomain = domainOf(mail.fromEmail);
@@ -465,7 +584,7 @@ export function sendingIpOf(headers: SignalMail["headers"]): string | null {
   return m ? m[1]! : null;
 }
 
-/** Every local rule: authentication, display name, links, attachments, dates, Message-ID. */
+/** Every local rule: authentication, display name, links, mailbox lures, attachments, dates, Message-ID. */
 export function localSignals(mail: SignalMail, ctx: SignalContext): LocalSignals {
   const auth = authSummary(mail.headers, mail.fromEmail);
   const links = extractLinks(mail.html, mail.text);
@@ -474,6 +593,7 @@ export function localSignals(mail: SignalMail, ctx: SignalContext): LocalSignals
     ...ownerSpoofSignals(mail, ctx, auth),
     ...displayNameSignals(mail, ctx),
     ...linkSignals(links, ctx.ownerDomains),
+    ...lureSignals(mail, ctx, links),
     ...attachmentSignals(mail.attachments),
     ...structureSignals(mail, ctx),
   ];

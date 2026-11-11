@@ -8,7 +8,9 @@ import { inboundRawKey } from "../src/email";
 import { utcDay } from "../src/services/ai";
 import { runIngest, type IngestStep } from "../src/services/ingest/run";
 import { learn } from "../src/services/spam/bayes";
+import { rescanOutdatedRules } from "../src/crons/spam-rescan";
 import { scanStoredMessage } from "../src/services/spam/ingest";
+import { RULES_VERSION } from "../src/services/spam/signals-run";
 import { getIngestJob, reconcileIngest } from "../src/services/ingest-dispatch";
 import { fakeAi } from "./helpers/ai";
 import { id, messageRow, seedMailbox, seedThread } from "./helpers/seed";
@@ -22,8 +24,11 @@ async function setting(over: Partial<typeof aiSettings.$inferInsert> = {}) {
   await db.insert(aiSettings).values(row).onConflictDoUpdate({ target: aiSettings.id, set: row });
 }
 
-async function delivery(body = "Synthetic meeting note", from = "sender@ext.test", authenticated = true) {
+type Body = string | ((domain: string) => string);
+
+async function delivery(content: Body = "Synthetic meeting note", from = "sender@ext.test", authenticated = true) {
   const domain = `${id()}.test`;
+  const body = typeof content === "function" ? content(domain) : content;
   const box = await seedMailbox(db, { orgId: id(), domain, localPart: "me" });
   const rawKey = inboundRawKey(new Date());
   const raw = new TextEncoder().encode([
@@ -36,7 +41,7 @@ async function delivery(body = "Synthetic meeting note", from = "sender@ext.test
   return { ...box, domain, params: { rawKey, receivedAt: new Date().toISOString() } };
 }
 
-async function stored(body?: string, authenticated = true) {
+async function stored(body?: Body, authenticated = true) {
   const item = await delivery(body, "sender@ext.test", authenticated);
   const result = await runIngest(env, item.params, step);
   if (result.status !== "stored") throw new Error("fixture not stored");
@@ -189,6 +194,48 @@ describe("inbound spam runtime integration", () => {
     expect(await scanStoredMessage({ ...env, AI: ai.ai }, item.messageId)).toBe("archive");
     expect((await db.query.messages.findFirst({ where: eq(messages.id, item.messageId) }))?.spamVerdict).toMatchObject({ combiner: { hardRule: "wrote-to-sender", folder: "inbox" } });
     expect(ai.run).not.toHaveBeenCalled();
+  });
+
+  it("after a rules upgrade, moves phishing already in the inbox without calling a model", async () => {
+    await setting({ ai: true });
+    const lure = (domain: string) =>
+      `Mail server detected that the password of your email me@${domain} will soon expire. Confirm: https://s3.eu-west-1.wasabisys.com/b/index.html#me@${domain}`;
+    // What an install on the previous rules holds: a clean verdict with no rules version.
+    const old = { layer1: { ran: true, lookups: false, signals: [], score: 0 }, ai: { status: "skipped", reason: "certain" }, combiner: { folder: "inbox", fallback: "certain" } };
+    const [phish, keptByOwner, unreadable, clean] = [await stored(lure), await stored(lure), await stored(lure), await stored()];
+    for (const item of [phish, keptByOwner, unreadable, clean]) {
+      await db.update(messages).set({ spamVerdict: old, scanStatus: "scanned" }).where(eq(messages.id, item.messageId));
+    }
+    await db.insert(spamTraining).values({ messageId: keptByOwner.messageId, label: "ham" });
+    await env.MAIL_STORE.delete(unreadable.params.rawKey);
+    const ai = fakeAi();
+
+    const first = await rescanOutdatedRules({ ...env, AI: ai.ai }, 100);
+    expect(first).toMatchObject({ moved: 1, failed: 1 });
+    expect(ai.run).not.toHaveBeenCalled();
+
+    const folderOf = async (item: { threadId: string }) => (await db.query.threads.findFirst({ where: eq(threads.id, item.threadId) }))?.folder;
+    const verdictOf = async (item: { messageId: string }) => (await db.query.messages.findFirst({ where: eq(messages.id, item.messageId) }))?.spamVerdict;
+    expect(await folderOf(phish)).toBe("spam");
+    expect(await verdictOf(phish)).toMatchObject({
+      layer1: { rules: RULES_VERSION },
+      ai: { status: "skipped", reason: "certain" },
+      combiner: { folder: "spam", phishingEvidence: true },
+    });
+    // The owner said "not spam": never rescored. Ordinary mail stays put.
+    expect(await folderOf(keptByOwner)).toBe("inbox");
+    expect((await verdictOf(keptByOwner))?.layer1).not.toHaveProperty("rules");
+    expect(await folderOf(clean)).toBe("inbox");
+    expect(await verdictOf(clean)).toMatchObject({ layer1: { rules: RULES_VERSION }, combiner: { folder: "inbox" } });
+    // Mail that cannot be scored is stamped, not retried on every run.
+    expect(await folderOf(unreadable)).toBe("inbox");
+    expect(await verdictOf(unreadable)).toMatchObject({ layer1: { rules: RULES_VERSION } });
+    expect(await rescanOutdatedRules({ ...env, AI: ai.ai }, 100)).toMatchObject({ attempted: 0 });
+
+    // With local filters off nothing is rescored.
+    await db.update(messages).set({ spamVerdict: old }).where(eq(messages.id, clean.messageId));
+    await setting({ localFilters: false });
+    expect(await rescanOutdatedRules(env, 100)).toMatchObject({ attempted: 0 });
   });
 
   it("scheduled rescans continue past an operational failure and complete other due mail", async () => {

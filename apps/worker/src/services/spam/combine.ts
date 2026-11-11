@@ -44,10 +44,19 @@ export const DEFAULT_WEIGHTS: Record<WeightSet, Weights> = {
 const PHISHING_SIGNALS = new Set([
   "openphish_listed", "cf_security_blocked", "spamhaus_dbl", "lookalike_owner_domain", "lookalike_brand_domain",
   "display_name_spoofs_owner", "display_name_spoofs_contact", "owner_domain_spoof", "link_text_mismatch",
-  "double_extension", "dangerous_attachment",
+  "double_extension", "dangerous_attachment", "mailbox_credential_lure", "lure_names_recipient", "recipient_in_link",
+  "storage_hosted_page", "display_name_role", "obfuscated_sender_text", "subject_names_recipient",
 ]);
 const LINK_SIGNALS = new Set(["openphish_listed", "cf_security_blocked", "spamhaus_dbl"]);
 const PHISHING_WEIGHTS = { bias: -3, signals: 2, ai_phishing: 1.5, ai_impersonation: 0.5 };
+/**
+ * Phishing signs of at least this many kinds, with weights adding to at least
+ * this much, send mail to Spam whatever the spam score says. A new mailbox has
+ * no labels for Bayes to learn from, so the spam score alone lets through mail
+ * that several independent rules agree on. One kind is never enough, and the
+ * AI inputs do not count.
+ */
+export const PHISHING_EVIDENCE = { kinds: 2, weight: 5 } as const;
 
 export interface SenderHistory {
   inbound: number;
@@ -85,6 +94,8 @@ export interface CombinedVerdict {
   /** Why the AI-free set was used, e.g. "budget-spent"; null when the AI set ran. */
   fallback: string | null;
   hardRule: HardRule | null;
+  /** True when the phishing signs alone met PHISHING_EVIDENCE. */
+  phishingEvidence: boolean;
   features: Features;
   contributions: Contribution[];
   phishingSignals: string[];
@@ -130,12 +141,16 @@ export function capAiWeights(w: Weights): Weights {
   return { bias: Math.min(w.bias, AI_MAX_BIAS), weights };
 }
 
-function phishingOf(signals: Signal[], f: Features): { probability: number; signals: string[] } {
+function phishingOf(signals: Signal[], f: Features): { probability: number; signals: string[]; evidence: boolean } {
   const hits = signals.filter((s) => PHISHING_SIGNALS.has(s.id));
-  const sum = hits.reduce((s, x) => s + Math.max(0, x.weight), 0);
+  // Each kind of evidence counts once: a newsletter with ten tracked links is not ten times as suspicious.
+  const strongest = new Map<string, number>();
+  for (const h of hits) strongest.set(h.id, Math.max(strongest.get(h.id) ?? 0, h.weight));
+  const sum = [...strongest.values()].reduce((s, w) => s + w, 0);
   const ai = Math.min(AI_CAP, PHISHING_WEIGHTS.ai_phishing * (f.ai_phishing ?? 0) + PHISHING_WEIGHTS.ai_impersonation * (f.ai_impersonation ?? 0));
   const logit = PHISHING_WEIGHTS.bias + PHISHING_WEIGHTS.signals * (Math.min(sum, 25) / 5) + ai;
-  return { probability: sigmoid(logit), signals: [...new Set(hits.map((h) => h.id))] };
+  const evidence = strongest.size >= PHISHING_EVIDENCE.kinds && sum >= PHISHING_EVIDENCE.weight;
+  return { probability: sigmoid(logit), signals: [...strongest.keys()], evidence };
 }
 
 export function logit(w: Weights, f: Features): number {
@@ -145,7 +160,8 @@ export function logit(w: Weights, f: Features): number {
 /**
  * The verdict for one message. Hard rules first: a blocked sender is spam,
  * someone the owner has written to is inbox. Otherwise phishing above the
- * quarantine threshold goes to Quarantine, and spam above 0.5 to Spam.
+ * quarantine threshold goes to Quarantine, and spam above 0.5 or enough
+ * phishing signs (PHISHING_EVIDENCE) to Spam.
  */
 export function combine(input: CombinerInput, weights: Record<WeightSet, Weights> = DEFAULT_WEIGHTS, fallback: string | null = null): CombinedVerdict {
   const features = featuresOf(input);
@@ -169,7 +185,7 @@ export function combine(input: CombinerInput, weights: Record<WeightSet, Weights
         ? "inbox"
         : phishing.probability >= QUARANTINE_THRESHOLD
           ? "quarantine"
-          : probability >= SPAM_THRESHOLD
+          : probability >= SPAM_THRESHOLD || phishing.evidence
             ? "spam"
             : "inbox";
 
@@ -181,6 +197,7 @@ export function combine(input: CombinerInput, weights: Record<WeightSet, Weights
     weights: set,
     fallback: set === "ai" ? null : fallback,
     hardRule,
+    phishingEvidence: phishing.evidence,
     features: Object.fromEntries(Object.entries(features).map(([k, v]) => [k, round(v)])),
     contributions,
     phishingSignals: phishing.signals,
@@ -272,9 +289,10 @@ export async function scanMessage(deps: ScanDeps, input: ScanInput): Promise<Sca
 /**
  * Stores the verdict JSON for the "why" panel and moves the thread. Only a
  * thread still in the inbox moves to Spam or Quarantine; an inbox verdict
- * never pulls a thread out of a folder the owner chose.
+ * never pulls a thread out of a folder the owner chose. `keepAi` is for a
+ * rules-only rescan: the stored classifier result and scan status stay as they are.
  */
-export async function recordVerdict(db: Db, messageId: string, result: ScanResult): Promise<Folder | null> {
+export async function recordVerdict(db: Db, messageId: string, result: ScanResult, opts: { keepAi?: boolean } = {}): Promise<Folder | null> {
   const row = await db
     .select({ verdict: messages.spamVerdict, threadId: messages.threadId })
     .from(messages)
@@ -290,9 +308,9 @@ export async function recordVerdict(db: Db, messageId: string, result: ScanResul
         : outcome
           ? { status: "skipped", reason: outcome.reason }
           : { status: "skipped", reason: result.verdict.fallback };
-  const spamVerdict = { ...(row.verdict ?? {}), ai, combiner: result.verdict };
+  const spamVerdict = { ...(row.verdict ?? {}), ...(opts.keepAi ? {} : { ai }), combiner: result.verdict };
   const scanStatus = outcome?.status === "unscanned" ? ("unscanned" as const) : ("scanned" as const);
-  const updates = [db.update(messages).set({ spamVerdict, scanStatus }).where(eq(messages.id, messageId))];
+  const updates = [db.update(messages).set(opts.keepAi ? { spamVerdict } : { spamVerdict, scanStatus }).where(eq(messages.id, messageId))];
   // Commit the replay marker and folder together: a retried scan must never
   // observe a saved verdict whose thread move was lost to a partial write.
   await batch(db, [
