@@ -7,9 +7,18 @@ import { fingerprintSignal, fingerprintText, findSpamFingerprint, simhash } from
 import { localSignals, linkDomains, sumWeights, type AuthSummary, type Signal, type SignalContext, type SignalMail } from "./signals";
 import { checkSecureResolver, checkSpamhaus, loadOpenPhish, matchOpenPhish, MAX_LOOKUP_DOMAINS, type Fetcher } from "./signals-lookup";
 
+/**
+ * Raised whenever the local rules change what they catch. Recent inbox mail
+ * scored by an older rule set is scored again (crons/spam-rescan.ts), so an
+ * upgrade also covers what was delivered before it.
+ */
+export const RULES_VERSION = 2;
+
 export interface Layer1Result {
   /** False when the owner hasn't turned local filters on; nothing else ran. */
   ran: boolean;
+  /** RULES_VERSION when these signals were collected; absent on verdicts from before it existed. */
+  rules?: number;
   lookups: boolean;
   auth: AuthSummary | null;
   signals: Signal[];
@@ -80,5 +89,5 @@ export async function collectSignals(
     errors.push(...secure.errors, ...(spamhaus?.errors ?? []));
   }
 
-  return { ran: true, lookups, auth: local.auth, signals, score: sumWeights(signals), fingerprint, linkDomains: domains, errors };
+  return { ran: true, rules: RULES_VERSION, lookups, auth: local.auth, signals, score: sumWeights(signals), fingerprint, linkDomains: domains, errors };
 }

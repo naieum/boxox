@@ -44,6 +44,21 @@ links. 1.1.1.2 DoH lookups (a `0.0.0.0` answer means blocked; see `docs/spikes/p
 OpenPhish feed are spam signals. The warning page follows only signed URLs, so it is not an open redirect.
 `spam-signals.test.ts::flags link text that shows a different domain` covers the signal.
 
+### Mailbox credential lures
+
+**Threat.** Mail from a properly authenticated throwaway domain poses as the mail system ("your email password will
+expire", "mailbox full", "messages held") and links to a login page on a reputable host such as object storage. It
+passes SPF, DKIM and DMARC, and its link domain is on no block list.
+
+**Defence.** Local rules read the subject and body for notices about the mailbox itself, the recipient's address in
+the subject, body or link (including base64 in the fragment), pages hosted on object storage, role display names such
+as "Mail Admin", and hidden or mixed-script characters. Two kinds of phishing sign with a combined weight of 5 send
+the mail to Spam even on a new mailbox with no training; about 11 sends it to Quarantine. After an upgrade that
+changes the rules, the last 30 days of inbox mail are scored again without calling a model. Mail with none of these
+signs still depends on the Bayes filter and the owner's labels.
+`spam-signals.test.ts::quarantines a mailbox password lure from an authenticated throwaway domain` and
+`ingest-spam.test.ts::after a rules upgrade, moves phishing already in the inbox without calling a model` cover it.
+
 Test: apps/worker/test/safe-render.test.ts::the link warning page only follows signed urls
 
 ### Spoofing and look-alikes

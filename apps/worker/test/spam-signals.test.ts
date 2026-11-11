@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { aiSettings, messages, spamFingerprints } from "@boxox/db";
 import { OPENPHISH_FEED_URL, parseOpenPhishFeed, refreshOpenPhish } from "../src/crons/openphish";
 import { createDb } from "../src/db";
+import { combine } from "../src/services/spam/combine";
 import {
   findSpamFingerprint,
   forgetSpamFingerprint,
@@ -148,6 +149,107 @@ describe("header and structure rules", () => {
 
     const entity = run(mail({ html: '<a href="http://203.0.113.9/a">bank&#46;example</a> <a href="https://bit.ly/x">x</a>', text: "x" }));
     expect(ids(entity.signals)).toEqual(expect.arrayContaining(["link_text_mismatch", "ip_link", "url_shortener"]));
+  });
+
+  it("quarantines a mailbox password lure from an authenticated throwaway domain", () => {
+    // base64("hello@boxox.dev"), as phishing kits pre-fill the address on the landing page.
+    const link = "https://s3.ap-northeast-1.wasabisys.com/bucket/index.html?X-Amz-Expires=565200&amp;X-Amz-SignedHeaders=host#aGVsbG9AYm94b3guZGV2";
+    const lure = mail({
+      headers: [
+        { key: "received", value: "from mailsync.sender.example (203.0.113.7) by mx.cloudflare.net" },
+        { key: "authentication-results", value: CF_PASS },
+        { key: "subject", value: "Password Reset" },
+      ],
+      fromName: "Mail Admin",
+      fromEmail: "admin@sender.example",
+      text: null,
+      html: `<p><strong>Message From&nbsp;boxox.dev&nbsp;Trusted Server</strong></p><div>Attention: hello<br>
+        Mail server detected that the password of your email&nbsp;hello@boxox.dev will soon expire.<br>
+        To continue usage of the same password, please confirm below<br>
+        <a href="${link}">Confirm Password</a><br><a href="${link}">HERE</a> to unsubscribe.</div>`,
+    });
+    const r = localSignals(lure, { ownerDomains: OWNER, now: NOW, recipients: ["hello@boxox.dev"] });
+    expect(r.auth.dmarc).toBe("pass");
+    expect(ids(r.signals)).toEqual(expect.arrayContaining([
+      "display_name_role", "mailbox_credential_lure", "lure_names_recipient", "recipient_in_link", "storage_hosted_page",
+    ]));
+    expect(r.signals.filter((s) => s.id === "recipient_in_link")).toEqual([
+      { id: "recipient_in_link", weight: 2.5, detail: "s3.ap-northeast-1.wasabisys.com (fragment)" },
+    ]);
+    const verdict = combine({ layer1: r, bayes: null, sender: null, blockedSender: false });
+    expect(verdict.folder).toBe("quarantine");
+  });
+
+  it("sends a lure to Spam on two kinds of phishing sign, but never on one", () => {
+    const text = "Your mailbox is almost full and incoming mail will be suspended. Upgrade: https://quota.sender.example/u";
+    const recipients = ["hello@boxox.dev"];
+    const verdictOf = (m: SignalMail) => {
+      const layer1 = localSignals(m, { ownerDomains: OWNER, now: NOW, recipients });
+      return { ids: ids(layer1.signals), ...combine({ layer1, bayes: null, sender: null, blockedSender: false }) };
+    };
+
+    const one = verdictOf(mail({ text }));
+    expect(one.ids).toContain("mailbox_credential_lure");
+    expect(one).toMatchObject({ folder: "inbox", phishingEvidence: false });
+
+    const two = verdictOf(mail({ text: `${text} for hello@boxox.dev` }));
+    expect(two.ids).toEqual(expect.arrayContaining(["mailbox_credential_lure", "lure_names_recipient"]));
+    expect(two.probability).toBeLessThan(0.5);
+    expect(two).toMatchObject({ folder: "spam", phishingEvidence: true });
+  });
+
+  it("flags hidden characters, mixed scripts and the recipient's address in the subject", () => {
+    const subject = (value: string, fromName = "Alice") => {
+      const m = mail({ fromName });
+      return ids(localSignals({ ...m, headers: [...m.headers, { key: "subject", value }] }, { ownerDomains: OWNER, now: NOW, recipients: ["hello@boxox.dev"] }).signals);
+    };
+    // Soft hyphens inside words, and Cyrillic letters inside a Latin name.
+    expect(subject("Y\u00adour A\u00adcc\u00adount")).toContain("obfuscated_sender_text");
+    expect(subject("Statement", "W\u0435llsF\u0430rg\u043e Bank")).toContain("obfuscated_sender_text");
+    expect(subject("Deactivation in progress for hello@boxox.dev")).toContain("subject_names_recipient");
+    expect(subject("Roundcube notice", "Webmail Support Team")).toContain("display_name_role");
+    // Whole words in another script, accents and emoji are ordinary text.
+    const plain = subject("Привет, café ☕ résumé", "Алиса");
+    expect(plain).not.toContain("obfuscated_sender_text");
+    expect(plain).not.toContain("subject_names_recipient");
+    expect(plain).not.toContain("display_name_role");
+  });
+
+  it("counts at most two link mismatches, so a tracked newsletter is not phishing", () => {
+    const anchors = ["news.example", "shop.example", "blog.example", "jobs.example"].map((d) => `<a href="https://click.tracker.example/${d}">${d}</a>`).join(" ");
+    const layer1 = run(mail({ html: `<p>${anchors}</p>`, text: "This week" }));
+    expect(layer1.signals.filter((s) => s.id === "link_text_mismatch")).toHaveLength(2);
+    expect(combine({ layer1, bayes: null, sender: null, blockedSender: false })).toMatchObject({ folder: "inbox", phishingEvidence: false });
+  });
+
+  it("leaves ordinary account mail and tracked links alone", () => {
+    const recipients = ["hello@boxox.dev"];
+    const lureIds = ["display_name_role", "mailbox_credential_lure", "lure_names_recipient", "recipient_in_link", "storage_hosted_page"];
+    const check = (m: SignalMail) => ids(localSignals(m, { ownerDomains: OWNER, now: NOW, recipients }).signals).filter((id) => lureIds.includes(id));
+
+    // A real service resetting its own password, naming the recipient.
+    expect(check(mail({
+      fromName: "Sender Support",
+      headers: [{ key: "authentication-results", value: CF_PASS }, { key: "subject", value: "Reset your password" }],
+      text: "We received a request to reset the password for your Sender account hello@boxox.dev. https://sender.example/reset/abc123def456ghi789",
+    }))).toEqual([]);
+
+    // The plain address in an unsubscribe query, and a PDF on object storage.
+    expect(check(mail({
+      text: "Your invoice: https://files.s3.amazonaws.com/invoices/1042.pdf Unsubscribe: https://sender.example/u?email=hello%40boxox.dev",
+    }))).toEqual([]);
+
+    // Talking about mailbox passwords without anything to click is not a lure.
+    expect(check(mail({ text: "Remember that your email password will expire next month; ask me if you need help." }))).toEqual([]);
+
+    // The owner's own domain may send these.
+    expect(check(mail({
+      fromName: "Mail Admin",
+      fromEmail: "admin@boxox.dev",
+      headers: [{ key: "authentication-results", value: "mx.cloudflare.net; dkim=pass header.d=boxox.dev; dmarc=pass header.from=boxox.dev" }],
+      rfcMessageId: "<2@boxox.dev>",
+      text: "Your mailbox is almost full. https://boxox.dev/settings",
+    }))).toEqual([]);
   });
 
   it("flags Reply-To mismatch, bad attachments, odd dates and Message-ID", () => {

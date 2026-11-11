@@ -17,6 +17,8 @@ node --experimental-transform-types scripts/model-eval.ts --sample 120 --third-p
 node --experimental-transform-types scripts/model-eval.ts --sample 120 --third-party --gateway default --cache-only
 ```
 
+Run these on Node.js 22 or 24. Node.js 26 no longer accepts `--experimental-transform-types`.
+
 `spam-eval.ts` executes the production rules, tokenizer, Bayes probabilities and combiner, with in-memory Bayes counts.
 `model-eval.ts` executes `classify()` → `runAi()` → a real remote `env.AI.run` binding from wrangler's platform proxy;
 no deployed Worker is needed. The third-party models use the authenticated `default` AI Gateway with logs and cache
@@ -60,40 +62,54 @@ Limitations:
 
 ## AI off: whole corpus (`spam-eval.ts`, 5-fold)
 
+Re-measured on 2026-11-11 with the 2.4.10 rules. The model bake-off and the AI on versus AI off comparison further
+down were measured on 2026-10-18 with the earlier rules and have not been rerun.
+
 Each fold is scored by Bayes, sender reputation and refit weights learned only from the other four folds. This stands in
 for a mailbox whose owner has labelled everything else.
 
 | Pipeline | Precision | Recall | False positive rate | False positives | Phishing → Quarantine |
 |---|---:|---:|---:|---:|---:|
-| Layer-1 rules only (day one, no labels) | 90.5% | 2.7% | 0.22% | 9 of 4,150 | 0.1% |
+| Layer-1 rules only (day one, no labels) | 98.9% | 14.6% | 0.12% | 5 of 4,150 | 8.5% |
 | Bayes only (log-odds > 0) | 99.4% | 96.3% | 0.48% | 20 of 4,150 | – |
-| AI off: rules + Bayes + reputation, hand-set weights | **99.8%** | 91.5% | **0.12%** | 5 of 4,150 | 0.1% |
-| AI off: same, weights refit on labels | 99.4% | 95.8% | 0.43% | 18 of 4,150 | 0.1% |
+| AI off: rules + Bayes + reputation, hand-set weights | **99.9%** | 91.6% | **0.10%** | 4 of 4,150 | 8.5% |
+| AI off: same, weights refit on labels | 99.4% | 95.8% | 0.41% | 17 of 4,150 | 8.5% |
 
 **A newer mailbox** (`--train-limit 100`, so at most 100 labels per fold):
 
 | Pipeline | Precision | Recall | False positive rate | False positives |
 |---|---:|---:|---:|---:|
 | Bayes only | 95.7% | 85.2% | 2.92% | 121 of 4,150 |
-| AI off, hand-set weights | 98.3% | 63.9% | 0.87% | 36 of 4,150 |
-| AI off, refit weights | 97.4% | 77.5% | 1.59% | 66 of 4,150 |
+| AI off, hand-set weights | 98.4% | 65.3% | 0.84% | 35 of 4,150 |
+| AI off, refit weights | 97.5% | 77.8% | 1.54% | 64 of 4,150 |
 
 By source, with all labels:
 - Easy ham: 0 of 3,900 flagged.
-- Hard ham: 2.0% flagged with hand-set weights, 6.8% with refit weights.
+- Hard ham: 1.6% flagged with hand-set weights, 6.4% with refit weights.
 - Spam: 88% caught with hand-set weights, 94% with refit weights.
 - Phishing: 95 to 99% caught.
 
 **Findings:**
-1. **Layer-1 rules alone almost never flag anything** (2.7% recall). They are a precise extra input, not a filter. Most
-   of the work comes from Bayes once there are labels.
+1. **Layer-1 rules alone flag little** (14.6% recall: 34% of phishing, 1% of spam). They are a precise extra input, not
+   a filter. Most of the work comes from Bayes once there are labels. Before 2.4.10 day-one recall was 2.7% and 5% of
+   phishing. The gain comes from the mailbox-lure rules (`mailbox_credential_lure`, `lure_names_recipient`,
+   `recipient_in_link`, `storage_hosted_page`, `display_name_role`, `subject_names_recipient`,
+   `obfuscated_sender_text`) and from sending mail to Spam when two kinds of phishing sign add up to a weight of 5
+   (`PHISHING_EVIDENCE`). None of the seven rules flags any ham here; `mailbox_credential_lure` and
+   `subject_names_recipient` each fire on 2 of 4,150 ham, alone, which is not enough.
 2. **The class-balanced refit buys recall with false positives.** On this corpus it adds about 4 points of recall and
    13 false positives, all of them hard ham. The plan's goal is close to zero false positives, so the refit's class
    weighting, or the spam threshold, should be reviewed with real owner labels before this is relied on.
-3. **Without AI, phishing almost never reaches Quarantine** (0.1%). It is caught as spam, but the hand-set phishing
-   model needs a signal sum of about 11 to pass 0.8. Only `display_name_spoofs_owner` (28% of phishing) and the link
-   and brand signals fire often, at weights 2 to 5. Quarantine with AI off needs the phishing weights retuned. That is
-   the combiner's code, and is left for a follow-up.
+3. **Without AI, little phishing reaches Quarantine** (8.5%, from 0.1% before 2.4.10). Most is caught as spam, but
+   the hand-set phishing model needs a signal sum of about 11 to pass 0.8. `recipient_in_link` (41% of phishing),
+   `display_name_spoofs_owner` (28%), `subject_names_recipient` (15%) and the link and brand signals fire often, at
+   weights 1.5 to 5. Each kind of sign now counts once in the phishing sum, and at most two `link_text_mismatch` hits
+   count in the rule score: a newsletter whose links all pass through one click tracker used to stack them, which
+   caused 4 of the 9 earlier day-one false positives and the one ham message in Quarantine.
+4. **The ham is from 2002.** It has no modern marketing mail, so zero false positives from the new rules is weak
+   evidence. The rules are limited by design instead: they never fire for the owner's own domains, a lure needs a link
+   or attachment, the plain address in a link's query string (ordinary unsubscribe links) is ignored, and no single
+   kind of sign moves mail out of the inbox.
 
 ## Same-sample model bake-off
 

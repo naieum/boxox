@@ -9,6 +9,7 @@ export interface SpamVerdict {
     weights: "ai" | "ai-free";
     fallback: string | null;
     hardRule: "blocked-sender" | "wrote-to-sender" | null;
+    phishingEvidence?: boolean;
     contributions: { feature: string; value: number; weight: number; contribution: number }[];
     phishingSignals: string[];
   };
@@ -74,6 +75,7 @@ export function SpamWhy({ verdict, folder }: { verdict: SpamVerdict | null; fold
           {c.hardRule === "wrote-to-sender" && <div>You have written to this sender, so their mail always goes to your inbox.</div>}
           {c.fallback && c.weights === "ai-free" && <div>{fallbackText(c.fallback)}</div>}
           {c.folder === "quarantine" && <div>Phishing signs: {c.phishingSignals.join(", ") || "AI phishing score"}.</div>}
+          {c.folder === "spam" && c.phishingEvidence && <div>Several phishing signs together sent this to Spam: {c.phishingSignals.join(", ")}.</div>}
           <table className="w-full">
             <thead>
               <tr className="text-left text-[11px] uppercase text-[#7c838f]">
