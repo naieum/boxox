@@ -12,7 +12,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 
 [![A threaded conversation in the Box Ox mail client](https://boxox.dev/screenshots/02-thread-1440.webp)](https://boxox.dev/screenshots/)
 
-**Current release: 2.5.0** — installs without API tokens or Cloudflare Access setup: you sign in with a passkey and connect a mail domain with one command. See the [2.5.0 release notes](docs/release-2.5.0.md).
+**Current release: 2.5.1** — a security release: Hono 4.13.19 and other November 2026 dependency advisories, and patched Node.js only. See the [2.5.1 release notes](docs/release-2.5.1.md). 2.5.0 installs without API tokens or Cloudflare Access setup: you sign in with a passkey and connect a mail domain with one command; see the [2.5.0 release notes](docs/release-2.5.0.md).
 
 ## Deploy with the Cloudflare button
 
@@ -29,7 +29,7 @@ Leave the Node.js version setting in Workers Builds unset. The build reads `.nvm
 
 Requirements:
 
-- Node.js 22.23.4, 24.22.1, or 26.12.1 or newer on those lines. Odd-numbered lines such as 25 are unsupported. `pnpm install` stops on an unpatched version.
+- Node.js 22.23.5, 24.22.3, or 26.13.1 or newer on those lines. Odd-numbered lines such as 25 are unsupported. `pnpm install` stops on an unpatched version.
 - pnpm 10.25.0, Git, and Bash (use WSL on Windows).
 - A Cloudflare account with R2 activated. Workers Free runs the inbox profile; Workers Paid runs the full profile.
 - A domain on Cloudflare DNS for mail. The app can run on workers.dev before you connect one.

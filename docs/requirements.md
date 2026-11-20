@@ -46,7 +46,7 @@ Email Service supports transactional messages. Review [Cloudflare’s Email Serv
 
 Install these tools on your computer or CI runner:
 
-- Node.js 22 or later on a current security release (22.23.4, 24.22.1 or 26.12.1 and newer as of October 21, 2026; odd-numbered lines such as 25 are unsupported). Node runs the installer, the CLI and the SDK on your machine; the deployed app runs on Cloudflare's runtime, not Node.
+- Node.js 22 or later on a current security release (22.23.5, 24.22.3 or 26.13.1 and newer as of November 11, 2026; odd-numbered lines such as 25 are unsupported). Node runs the installer, the CLI and the SDK on your machine; the deployed app runs on Cloudflare's runtime, not Node.
 - pnpm 10.25.0.
 - Git.
 - Bash for the root deployment helper. On Windows, use a configured Bash environment such as WSL.
