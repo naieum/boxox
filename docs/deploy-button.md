@@ -66,7 +66,7 @@ Set these commands in Cloudflare:
 | --- | --- |
 | Build command | `pnpm --filter @boxox/mail build` |
 | Deploy command | `pnpm run deploy` |
-| Node.js version | Leave unset; `.nvmrc` pins 22.23.4, a patched release |
+| Node.js version | Leave unset; `.nvmrc` pins 22.23.5, a patched release |
 | Build variable, Paid only | `BOXOX_PLAN=paid` |
 
 Keep the pinned pnpm version from `package.json`. The deploy command checks types, builds the web app, provisions resources, and applies D1 migrations.

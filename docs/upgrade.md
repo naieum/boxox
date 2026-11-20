@@ -74,6 +74,12 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.5.0 to 2.5.1
+
+- Use Node.js 22.23.5, 24.22.3, 26.13.1, or a newer release on those lines. `pnpm install` stops with `ERR_PNPM_UNSUPPORTED_ENGINE` on an older one.
+- Run `pnpm run deploy`. The Worker moves to Hono 4.13.19; routes, responses and sign-in are unchanged.
+- No database migration, new secret, or reconnection is required.
+
 ### From 2.4.11 to 2.5.0
 
 - The installer needs no settings repeated: run `pnpm run deploy`. It applies migration `0010_owner_signin`.
