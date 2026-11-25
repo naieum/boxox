@@ -21,7 +21,9 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_MEMBER = 32 * 1024 * 1024
-MAX_TOTAL = 512 * 1024 * 1024
+# The built site keeps every downloadable release: each adds about 46 MiB of archive
+# and expanded source to one scan. 512 MiB was reached with ten archived releases.
+MAX_TOTAL = 1024 * 1024 * 1024
 PRIVATE_PARTS = {'.git', '.loops', '.wrangler', 'snitchfindings', 'node_modules'}
 PRIVATE_NAMES = re.compile(r'^(?:\.env(?:\..+)?|\.dev\.vars(?:\..+)?|\.spike-key|.+\.(?:pem|p12|pfx))$')
 HOME_PATH = re.compile(r'(?:/Users/|/home/)[\w.-]+|[A-Z]:\\Users\\[\w.-]+')

@@ -18,7 +18,8 @@ Read the [hosted deployment guide](https://boxox.dev/docs/deploy-button/) for re
 | Outbound sending and sent-mail copies | Not installed | Included |
 | AI, semantic search, and Browser Run | Not installed | Available with consent/configuration |
 
-Cloudflare allows verified-destination sends on Free, but this Box Ox profile does not install outbound sending.
+Since November 24, 2026, Cloudflare's Email Sending works on Workers Free, where it reaches only the [verified destination addresses](https://developers.cloudflare.com/email-service/configuration/destination-addresses/) in your account.
+This Box Ox profile does not use it. Sending from Box Ox needs the full install on Workers Paid.
 
 ## Plan detection
 
@@ -33,6 +34,8 @@ BOXOX_PLAN=free pnpm run deploy
 ```
 
 Use `BOXOX_PLAN=paid` only after confirming Workers Paid is enabled.
+Cloudflare now lets a Workers Free account turn on Email Sending for a domain, so domain setup does not catch a wrong answer.
+It then refuses mail to anyone but a verified destination address. The full install marks those messages failed with `E_RECIPIENT_PLAN_RESTRICTED`.
 A website’s Pro or Business plan does not establish the Workers plan.
 
 ## Costs and limits

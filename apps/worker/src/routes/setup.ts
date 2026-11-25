@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Env } from "../env";
 import { capabilities, isFree } from "../services/capabilities";
 import { log } from "../log";
+import { sendErrorHint } from "../services/outbound/errors";
 import type { AppContext } from "../middleware";
 import { onboardDomain, domainPreview } from "../services/domain-onboarding";
 export { domainPreview } from "../services/domain-onboarding";
@@ -253,7 +254,7 @@ export function createSetupRoutes(opts: { fetch?: typeof fetch } = {}) {
         } catch (err) {
           const code = (err as { code?: string }).code ?? "send_failed";
           log.warn("setup_test_send_failed", { code });
-          return c.json(bad((err as Error).message || "Send failed", code), 502);
+          return c.json(bad(sendErrorHint(err) ?? ((err as Error).message || "Send failed"), code), 502);
         }
       })
 

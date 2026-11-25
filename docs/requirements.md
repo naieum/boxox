@@ -6,13 +6,13 @@ Box Ox installs a Free inbox profile or a full Paid profile. Cloudflare bills yo
 
 Workers Paid starts at $5 USD per month per account. Your Workers share the account allowances. This minimum is not a total-cost estimate.
 
-Cloudflare includes 3,000 outbound Email Service messages per month. Additional messages cost $0.35 per 1,000. Account quotas and sandbox restrictions can limit sending.
+On Workers Paid, Cloudflare includes 3,000 outbound Email Service messages per month. Additional messages cost $0.35 per 1,000. Account quotas and sandbox restrictions can limit sending.
 
 Email Routing is available on Free and Paid without a per-message routing charge. Worker processing and storage have separate limits and charges.
 
-Free permits sending to verified destination addresses in your account. Sending to arbitrary recipients requires Paid. Queues, Workflows, and Vectorize also have Free capabilities. Their presence alone does not require Paid.
+Since November 24, 2026, Cloudflare's Email Sending is available on Workers Free, where it sends only to [verified destination addresses](https://developers.cloudflare.com/email-service/configuration/destination-addresses/) in your account. Those sends are free on both plans and do not count toward the monthly allowance. Sending to any other recipient requires Workers Paid. Queues, Workflows, and Vectorize also have Free capabilities. Their presence alone does not require Paid.
 
-The Free inbox profile supports receiving, keyword search, mail-reading agents, and inbound webhooks. It omits outbound sending, AI, semantic search, and Browser Run.
+The Free inbox profile supports receiving, keyword search, mail-reading agents, and inbound webhooks. It omits outbound sending, AI, semantic search, and Browser Run. Box Ox sends mail only from the full install on Workers Paid.
 Read the [Free profile guide](https://boxox.dev/docs/free/) for setup and preview verification limits.
 
 | Allowance | Workers Free | Workers Paid |
@@ -22,7 +22,7 @@ Read the [Free profile guide](https://boxox.dev/docs/free/) for setup and previe
 | Queue operations | 10,000 per day | 1 million per month included |
 | Queue retention | 24 hours | Longer retention available |
 
-Figures checked October 18, 2026. Review [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), [Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/), and [Queues pricing](https://developers.cloudflare.com/queues/platform/pricing/).
+Workers and Queues figures checked October 18, 2026. Email Service figures checked November 25, 2026. Review [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), [Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/), and [Queues pricing](https://developers.cloudflare.com/queues/platform/pricing/).
 
 ## Account
 

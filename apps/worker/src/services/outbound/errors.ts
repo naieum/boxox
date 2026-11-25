@@ -14,6 +14,9 @@ const PERMANENT_CODES = new Set([
   "E_SENDER_NOT_VERIFIED",
   "E_SENDER_DOMAIN_NOT_AVAILABLE",
   "E_RECIPIENT_NOT_ALLOWED",
+  // Email Sending on a Workers Free account refuses the whole message when any
+  // recipient is not one of the account's verified destination addresses.
+  "E_RECIPIENT_PLAN_RESTRICTED",
   "E_RECIPIENT_SUPPRESSED",
   "E_CONTENT_TOO_LARGE",
 ]);
@@ -36,9 +39,21 @@ export function classifySendError(err: unknown): SendErrorKind {
   return "ambiguous";
 }
 
+/** What the owner can do about a refusal whose cause is outside Box Ox. */
+const HINTS: Record<string, string> = {
+  E_RECIPIENT_PLAN_RESTRICTED:
+    "Nothing was sent. This Cloudflare account's Workers plan sends only to verified destination addresses. Switch the account to Workers Paid to send to anyone, or verify this recipient under Email Service > Destination addresses in Cloudflare.",
+};
+
+export function sendErrorHint(err: unknown): string | null {
+  return HINTS[sendErrorCode(err) ?? ""] ?? null;
+}
+
 export function sendErrorMessage(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
   const code = sendErrorCode(err);
+  const hint = sendErrorHint(err);
   // Bounded: send errors are shown to users and stored indefinitely.
-  return (code ? `${code}: ${message}` : message).slice(0, 500);
+  const text = code ? `${code}: ${message}` : message;
+  return (hint ? `${text.replace(/\.$/, "")}. ${hint}` : text).slice(0, 500);
 }

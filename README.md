@@ -12,7 +12,7 @@ Agents connect through OAuth/MCP or the grant-limited agent API.
 
 [![A threaded conversation in the Box Ox mail client](https://boxox.dev/screenshots/02-thread-1440.webp)](https://boxox.dev/screenshots/)
 
-**Current release: 2.5.1** — a security release: Hono 4.13.19 and other November 2026 dependency advisories, and patched Node.js only. See the [2.5.1 release notes](docs/release-2.5.1.md). 2.5.0 installs without API tokens or Cloudflare Access setup: you sign in with a passkey and connect a mail domain with one command; see the [2.5.0 release notes](docs/release-2.5.0.md).
+**Current release: 2.5.2** — follows Cloudflare Email Sending on Workers Free: a send Cloudflare refuses because of the plan is recorded as failed with what to do, and the plan rule is documented. See the [2.5.2 release notes](docs/release-2.5.2.md). 2.5.1 is a security release: Hono 4.13.19 and other November 2026 dependency advisories, and patched Node.js only; see the [2.5.1 release notes](docs/release-2.5.1.md). 2.5.0 installs without API tokens or Cloudflare Access setup: you sign in with a passkey and connect a mail domain with one command; see the [2.5.0 release notes](docs/release-2.5.0.md).
 
 ## Deploy with the Cloudflare button
 
@@ -59,17 +59,18 @@ Use the developer API for **transactional** mail from domains you own or have pe
 Box Ox has no broadcasts, audiences, or marketing campaigns.
 Cloudflare's [Email Service terms](https://www.cloudflare.com/service-specific-terms-developer-platform/#cloudflare-email-service) limit sending to messages tied to a specific customer interaction or transaction. Get confirmation from Cloudflare before relying on it for general conversational sending.
 
-As checked on October 18, 2026:
+As checked on October 18, 2026, and for the Workers Paid and Email Service rows on November 25, 2026:
 
 | Item | Starting cost |
 | --- | --- |
 | Workers Paid | $5 per month minimum |
-| Email Sending | 3,000 emails per account per month included, then $0.35 per 1,000 |
+| Email Sending | Workers Paid: 3,000 emails per account per month included, then $0.35 per 1,000. Workers Free: verified destination addresses only, at no charge. |
 | Email Routing | No per-message receiving charge. Worker execution and storage still count. |
 | AI and other bindings | Usage-based. OpenAI/Anthropic through AI Gateway require prepaid credits. |
 
 Check [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/) and [Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/) before enabling paid features.
 New sending accounts may have Sandbox limits or recipient restrictions.
+Box Ox sends only from the full install, and the full install needs Workers Paid: on a Workers Free account, Cloudflare refuses mail to anyone but that account's verified destination addresses.
 
 ## What reads your mail
 
