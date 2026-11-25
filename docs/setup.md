@@ -296,6 +296,10 @@ pnpm exec wrangler email routing dns get example.com
 Replace `example.com` with your zone.
 If `wrangler email` is missing, check that you used the repository's frozen lockfile rather than a global Wrangler installation.
 For authorization errors, check the selected account and your account role.
+A send that fails with `E_RECIPIENT_PLAN_RESTRICTED` means the Cloudflare account is on Workers Free.
+Cloudflare sent nothing. On that plan Email Sending reaches only the account's [verified destination addresses](https://developers.cloudflare.com/email-service/configuration/destination-addresses/).
+A test send to your own verified address can pass while mail to anyone else is refused.
+Switch the account to Workers Paid, then send again.
 Use `pnpm exec wrangler login` to refresh deployment OAuth when needed.
 Do not print or share the OAuth token to diagnose a failed API request.
 

@@ -289,6 +289,29 @@ describe("SendWorkflow", () => {
     expect(failed).toMatchObject({ type: "failed", detail: { reason: "permanent", attempts: 1 } });
   });
 
+  it("a Workers Free plan refusal is a definite failure, not an unknown delivery", async () => {
+    const { address } = await seedAddress();
+    const wf = recordingWorkflow();
+    const email = fakeEmail(async () => {
+      throw sendError("E_RECIPIENT_PLAN_RESTRICTED", "recipient not allowed by plan.");
+    });
+    const result = await queueOutbound(sendEnv(email, wf.binding), compose(address, ["gil@example.com"]));
+    const order: string[] = [];
+
+    const outcome = await runSend({ DB, MAIL_STORE, EMAIL: email }, wf.created[0]!.params, fakeStep(order).step);
+
+    expect(outcome).toBe("failed");
+    expect(email.send).toHaveBeenCalledTimes(1);
+    expect(order.filter((o) => o.startsWith("sleep"))).toEqual([]);
+    const after = await row(result.messageId);
+    expect(after.sendStatus).toBe("failed");
+    expect(after.sendError).toMatch(/^E_RECIPIENT_PLAN_RESTRICTED: recipient not allowed by plan\. Nothing was sent\./);
+    expect(after.sendError).toContain("Workers Paid");
+    expect(after.sendError).not.toContain("may have been sent");
+    const [failed] = await events(result.messageId);
+    expect(failed).toMatchObject({ type: "failed", detail: { reason: "permanent", attempts: 1 } });
+  });
+
   it("an ambiguous error is not retried", async () => {
     const { address } = await seedAddress();
     const wf = recordingWorkflow();

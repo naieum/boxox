@@ -341,6 +341,21 @@ describe("setup wizard API", () => {
     expect(test.status).toBe(200);
     expect(test.json.messageId).toBe("<fake@boxox.dev>");
     expect(sent).toEqual([expect.objectContaining({ from: "you@boxox.dev", to: "me@gmail.com" })]);
+
+    // A Workers Free account onboards the domain, then refuses unverified recipients.
+    const email = bindings.EMAIL as unknown as { send: (msg: unknown) => Promise<unknown> };
+    const working = email.send;
+    email.send = async () => {
+      throw Object.assign(new Error("recipient not allowed by plan"), { code: "E_RECIPIENT_PLAN_RESTRICTED" });
+    };
+    try {
+      const restricted = await call(app2, "POST", "/api/setup/test-send", { from: "you@boxox.dev", to: "stranger@example.net" });
+      expect(restricted.status).toBe(502);
+      expect(restricted.json.error.code).toBe("E_RECIPIENT_PLAN_RESTRICTED");
+      expect(restricted.json.error.message).toMatch(/Nothing was sent\..*Workers Paid.*verify this recipient/);
+    } finally {
+      email.send = working;
+    }
   });
 });
 

@@ -74,6 +74,12 @@ Code rolls back; the database does not.
 
 ## Version notes
 
+### From 2.5.1 to 2.5.2
+
+- Run `pnpm run deploy`. A send that Cloudflare refuses with `E_RECIPIENT_PLAN_RESTRICTED` is now recorded as failed with what to do, instead of as an unknown delivery.
+- That refusal means the Cloudflare account is on Workers Free. Sending from Box Ox needs Workers Paid.
+- No database migration, new secret, or reconnection is required.
+
 ### From 2.5.0 to 2.5.1
 
 - Use Node.js 22.23.5, 24.22.3, 26.13.1, or a newer release on those lines. `pnpm install` stops with `ERR_PNPM_UNSUPPORTED_ENGINE` on an older one.
